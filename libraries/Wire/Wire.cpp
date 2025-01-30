@@ -23,86 +23,107 @@ extern "C" {
 
 #include <Arduino.h>
 #include <wiring_private.h>
-
-#include "Wire.h"
+#include "customwire.h"
 
 using namespace arduino;
 
-TwoWire::TwoWire(SERCOM * s, uint8_t pinSDA, uint8_t pinSCL)
-{
-  this->sercom = s;
-  this->_uc_pinSDA=pinSDA;
-  this->_uc_pinSCL=pinSCL;
-  transmissionBegun = false;
+// Constructor just takes instance number
+TwoWire::TwoWire(uint8_t _instanceNumber) {
+    _instanceNumber = _instanceNumber;
 }
 
-void TwoWire::begin(void) {
-  //Master Mode
-  sercom->initMasterWIRE(TWI_CLOCK);
-  sercom->enableWIRE();
-
-  pinPeripheral(_uc_pinSDA, g_APinDescription[_uc_pinSDA].ulPinType);
-  pinPeripheral(_uc_pinSCL, g_APinDescription[_uc_pinSCL].ulPinType);
+void TwoWire::begin() {
+    // Set default clock rate (e.g., 1000 for 1 kHz)
+    setClock(1000);  
+    I2C_Init(_instanceNumber, 1000);  // Initialize I2C with the instance and baud rate
 }
 
-void TwoWire::begin(uint8_t address, bool enableGeneralCall) {
-  //Slave mode
-  sercom->initSlaveWIRE(address, enableGeneralCall);
-  sercom->enableWIRE();
 
-  pinPeripheral(_uc_pinSDA, g_APinDescription[_uc_pinSDA].ulPinType);
-  pinPeripheral(_uc_pinSCL, g_APinDescription[_uc_pinSCL].ulPinType);
-}
 
 void TwoWire::setClock(uint32_t baudrate) {
-  sercom->disableWIRE();
-  sercom->initMasterWIRE(baudrate);
-  sercom->enableWIRE();
-}
-
-void TwoWire::end() {
-  sercom->disableWIRE();
+    I2C_Init(_instanceNumber, baudrate);  
 }
 
 size_t TwoWire::requestFrom(uint8_t address, size_t quantity, bool stopBit)
 {
-  if(quantity == 0)
-  {
-    return 0;
-  }
-
-  size_t byteRead = 0;
-
-  rxBuffer.clear();
-
-  if(sercom->startTransmissionWIRE(address, WIRE_READ_FLAG))
-  {
-    // Read first data
-    rxBuffer.store_char(sercom->readDataWIRE());
-
-    bool busOwner;
-    // Connected to slave
-    for (byteRead = 1; byteRead < quantity && (busOwner = sercom->isBusOwnerWIRE()); ++byteRead)
-    {
-      sercom->prepareAckBitWIRE();                          // Prepare Acknowledge
-      sercom->prepareCommandBitsWire(WIRE_MASTER_ACT_READ); // Prepare the ACK command for the slave
-      rxBuffer.store_char(sercom->readDataWIRE());          // Read data and send the ACK
-    }
-    sercom->prepareNackBitWIRE();                           // Prepare NACK to stop slave transmission
-    //sercom->readDataWIRE();                               // Clear data register to send NACK
-
-    if (stopBit && busOwner)
-    {
-      sercom->prepareCommandBitsWire(WIRE_MASTER_ACT_STOP);   // Send Stop unless arbitration was lost
+    if (quantity == 0) {
+        return 0;
     }
 
-    if (!busOwner)
-    {
-      byteRead--;   // because last read byte was garbage/invalid
-    }
-  }
+    size_t byteRead = 0;
 
-  return byteRead;
+   rxBuffer.clear();  // Clear the buffer before filling it with new data
+   if(I2C_Transmit(A_instanceNumber,address,tempBuffer, tempBufferLength,I2C_REPSTART)){
+      read(address, rxBuffer, quantity);
+
+      // Create a temporary array to store the data from rxBuffer
+      uint8_t temp1[quantity];
+
+      // Copy data from rxBuffer to temp1
+      while (byteRead < quantity && rxBuffer.available()) {
+          temp1[byteRead] = read();  // Store data from rxBuffer into temp1
+          byteRead++;
+      }
+      I2C_Recieve(_instanceNumber,address, temp1, byteRead,REPEATED_START)
+      // Optionally send stop bit if required
+      if (stopBit) {
+        // Pass the temp1 array to your custom i2c_receive function
+        I2C_Recieve(_instanceNumber,address, temp1, byteRead,STOP_BIT);
+      }
+
+    return byteRead;  // Return the number of bytes read
+}
+}
+
+int TwoWire::read()
+{
+    // Check if there's data available in the rxBuffer
+    if (rxBuffer.available() > 0)
+    {
+        // Return the next byte from the rxBuffer
+        return rxBuffer.read_char();
+    }
+    else
+    {
+        // No data available
+        return -1;
+    }
+}
+
+
+
+size_t TwoWire::requestFrom(uint8_t address, size_t quantity, bool stopBit) {
+    if (quantity == 0) {
+        return 0;  // Nothing to request
+    }
+
+    size_t bytesRead = 0;  // Count of bytes successfully read
+    
+
+    // Start transmission to request data from the slave
+    if (I2C_Transmit(instance_number,Address,tempBuffer, tempBufferLength,I2C_REPSTART)) {
+        // Read bytes from the slave
+        for (bytesRead = 0; bytesRead < quantity; ++bytesRead) {
+            uint8_t dataByte;
+             
+            // Receive a byte
+            if (!I2C_Receive(instanceNumber, &dataByte, (bytesRead < quantity - 1))) {
+                // If reception fails, stop and return the number of bytes successfully read
+                break;
+            }
+
+            // Store the received byte in the rxBuffer
+            rxBuffer.store_char(dataByte);
+        }
+
+        // If requested, send the stop condition after the transmission
+        if (stopBit) {
+            I2C_Stop(instanceNumber);
+        }
+    }
+
+    // Return the total number of bytes successfully read
+    return bytesRead;
 }
 
 size_t TwoWire::requestFrom(uint8_t address, size_t quantity)
@@ -124,77 +145,82 @@ void TwoWire::beginTransmission(uint8_t address) {
 //  2 : NACK on transmit of address
 //  3 : NACK on transmit of data
 //  4 : Other error
-uint8_t TwoWire::endTransmission(bool stopBit)
-{
-  transmissionBegun = false ;
-
-  // Start I2C transmission
-  if ( !sercom->startTransmissionWIRE( txAddress, WIRE_WRITE_FLAG ) )
-  {
-    sercom->prepareCommandBitsWire(WIRE_MASTER_ACT_STOP);
-    return 2 ;  // Address error
-  }
-
-  // Send all buffer
-  while( txBuffer.available() )
-  {
-    // Trying to send data
-    if ( !sercom->sendDataMasterWIRE( txBuffer.read_char() ) )
-    {
-      sercom->prepareCommandBitsWire(WIRE_MASTER_ACT_STOP);
-      return 3 ;  // Nack or error
-    }
-  }
-  
-  if (stopBit)
-  {
-    sercom->prepareCommandBitsWire(WIRE_MASTER_ACT_STOP);
-  }   
-
-  return 0;
-}
 
 uint8_t TwoWire::endTransmission()
 {
   return endTransmission(true);
 }
 
+uint8_t TwoWire::endTransmission(bool stopBit) {
+    transmissionBegun = false;
+
+    // If there's no data in the tempBuffer, return success
+    if (tempBufferLength == 0) {
+        return 0;  // No data to send
+    }
+
+    // Call the custom transmit function with tempBuffer
+    I2C_Transmit(instance_number,Address,tempBuffer, tempBufferLength,I2C_REPSTART);
+
+    // Clear the tempBuffer after transmission
+    tempBufferLength = 0;
+}
+
+
+
 size_t TwoWire::write(uint8_t ucData)
 {
-  // No writing, without begun transmission or a full buffer
-  if ( !transmissionBegun || txBuffer.isFull() )
-  {
-    return 0 ;
-  }
+    // No writing if transmission hasn't begun or if the buffer is full
+    if (!transmissionBegun || txBuffer.isFull()) {
+        return 0;
+    }
 
-  txBuffer.store_char( ucData ) ;
+    // Store the data in the ring buffer
+    txBuffer.store_char(ucData);
 
-  return 1 ;
+    // Add data to the tempBuffer if there's space
+    if (tempBufferLength < sizeof(tempBuffer)) {
+        tempBuffer[tempBufferLength++] = ucData;
+    }
+
+    return 1;
 }
 
-size_t TwoWire::write(const uint8_t *data, size_t quantity)
-{
-  //Try to store all data
-  for(size_t i = 0; i < quantity; ++i)
-  {
-    //Return the number of data stored, when the buffer is full (if write return 0)
-    if(!write(data[i]))
-      return i;
-  }
 
-  //All data stored
-  return quantity;
+size_t TwoWire::write(const uint8_t *data, size_t quantity) {
+    size_t bytesWritten = 0;
+
+    // Ensure we don't exceed the maximum temporary array size
+    size_t maxBufferSize = sizeof(tempBuffer);
+
+    for (size_t i = 0; i < quantity; ++i) {
+        // If the ring buffer is full or tempBuffer exceeds its size, stop writing
+        if (txBuffer.isFull() || bytesWritten >= maxBufferSize) {
+            return bytesWritten;  
+        }
+
+        // Store the byte in the ring buffer
+        txBuffer.store_char(data[i]);
+
+        // Also store the byte in the temp array for transmission
+        tempBuffer[bytesWritten] = data[i];
+
+        bytesWritten++;
+    }
+
+    return bytesWritten;  // Return total number of bytes written
 }
+
 
 int TwoWire::available(void)
 {
   return rxBuffer.available();
 }
 
-int TwoWire::read(void)
-{
-  return rxBuffer.read_char();
-}
+// int TwoWire::read(void)
+// {
+//   return rxBuffer.read_char();
+// }
 
 int TwoWire::peek(void)
 {
@@ -207,132 +233,141 @@ void TwoWire::flush(void)
   // data transfer.
 }
 
-void TwoWire::onReceive(void(*function)(int))
-{
-  onReceiveCallback = function;
+
+
+
+
+#include "i2c.h"
+#include"gptimer.h"
+/*Necessary macros for I2C driver*/
+#define I2C_PIN 0x80
+#define I2C_ESO 0x40
+#define I2C_ES1 0x20
+#define I2C_ES2 0x10
+#define I2C_ENI 0x08
+#define I2C_STA 0x04
+#define I2C_STO 0x02
+#define I2C_ACK 0x01
+#define I2C_INI 0x40   
+#define I2C_STS 0x20
+#define I2C_BER 0x10
+#define I2C_AD0 0x08
+#define I2C_LRB 0x08
+#define I2C_AAS 0x04
+#define I2C_LAB 0x02
+#define I2C_BB  0x01
+#define I2C_START         (I2C_PIN | I2C_ESO | I2C_STA | I2C_ACK)
+#define I2C_STOP          (I2C_PIN | I2C_ESO | I2C_STO | I2C_ACK)
+#define I2C_REPSTART      (                 I2C_ESO | I2C_STA | I2C_ACK)
+#define I2C_IDLE          (I2C_ESO                  | I2C_ACK)
+#define I2C_NACK          (I2C_ESO)
+#define I2C_DISABLE       (I2C_PIN|I2C_ACK)
+#define I2C_OFFSET 0x100
+
+
+/* Struct to access I2C registers as 32 bit registers */
+#define I2C_REG(x) ((I2C_Type*)(I2C0_BASE + (x)*I2C_OFFSET))
+
+uint32_t I2C_Init(uint8_t instance_number,uint32_t clock_frequency)
+{ 
+  if(instance_number>1 || instance_number<0)
+	  return ENODEV;
+  I2C_REG(instance_number)->CTRL = I2C_PIN;//serial interface off -> equivalent to 0x80 in S1'
+  uint32_t scl_div = CLOCK_FREQUENCY_BASE/(2*2*clock_frequency);
+  I2C_REG(instance_number)->S2 = 1;//setting up clock ->equivalent to setting up register S2
+  I2C_REG(instance_number)->SCL = scl_div;
+  I2C_REG(instance_number)->CTRL = I2C_IDLE;//Enable Serial Interface thats it
+  return SUCCESS;
 }
 
-void TwoWire::onRequest(void(*function)(void))
+uint32_t I2C_Transmit(uint32_t instance_number,uint8_t slave_address,uint8_t *data,uint8_t length,uint8_t mode)
 {
-  onRequestCallback = function;
-}
-
-void TwoWire::onService(void)
-{
-  if ( sercom->isSlaveWIRE() )
+  if(instance_number>1 || instance_number<0)
+    return ENODEV;
+  if(mode & START_BIT)
+  while (!(I2C_REG(instance_number)->STATUS_b.STATUS_BB));//wait till bus is free
+  I2C_REG(instance_number)->S0=(slave_address<<1);//write data in data register
+  if(mode & START_BIT)
+  I2C_REG(instance_number)->CTRL = I2C_START;// as soon as start is initiated after start bit is given slave address along with r/~w is transmitted
+  while (((I2C_REG(instance_number)->CTRL_b.CTRL_PIN)!=0x00));// wait till the eight bits completely get transmitted
+  
+  if(!(I2C_REG(instance_number)->STATUS_b.STATUS_AD0_LRB))//check whether ack is receieved from slave
   {
-    if(sercom->isStopDetectedWIRE() || 
-        (sercom->isAddressMatch() && sercom->isRestartDetectedWIRE() && !sercom->isMasterReadOperationWIRE())) //Stop or Restart detected
-    {
-      sercom->prepareAckBitWIRE();
-      sercom->prepareCommandBitsWire(0x03);
+  
+    log_debug("\nAck received for slave address");
+        
+  }
+  else
+  {
+    log_error("\nAck not received for slave address: %x",slave_address);
+    I2C_REG(instance_number)->CTRL = I2C_STOP;
+    return ENOACKDEV;
+  }
 
-      //Calling onReceiveCallback, if exists
-      if(onReceiveCallback)
-      {
-        onReceiveCallback(available());
-      }
-      
-      rxBuffer.clear();
+  for (uint32_t i=0;i<length;i++)
+  {
+    I2C_REG(instance_number)->S0=data[i];// write the data in data register
+    while (((I2C_REG(instance_number)->CTRL_b.CTRL_PIN)!=0x00));// wait till the eight bits completely get transmitted
+    if(!(I2C_REG(instance_number)->STATUS_b.STATUS_AD0_LRB))//check whether ack is receieved from slave
+    {
+      log_debug("\nAck received after writing data");
     }
-    else if(sercom->isAddressMatch())  //Address Match
+    else
     {
-      sercom->prepareAckBitWIRE();
-      sercom->prepareCommandBitsWire(0x03);
-
-      if(sercom->isMasterReadOperationWIRE()) //Is a request ?
-      {
-        txBuffer.clear();
-
-        transmissionBegun = true;
-
-        //Calling onRequestCallback, if exists
-        if(onRequestCallback)
-        {
-          onRequestCallback();
-        }
-      }
-    }
-    else if(sercom->isDataReadyWIRE())
-    {
-      if (sercom->isMasterReadOperationWIRE())
-      {
-        uint8_t c = 0xff;
-
-        if( txBuffer.available() ) {
-          c = txBuffer.read_char();
-        }
-
-        transmissionBegun = sercom->sendDataSlaveWIRE(c);
-      } else { //Received data
-        if (rxBuffer.isFull()) {
-          sercom->prepareNackBitWIRE(); 
-        } else {
-          //Store data
-          rxBuffer.store_char(sercom->readDataWIRE());
-
-          sercom->prepareAckBitWIRE(); 
-        }
-
-        sercom->prepareCommandBitsWire(0x03);
-      }
+      log_error("\nAck not received after writing data");
+      I2C_REG(instance_number)->CTRL = I2C_STOP;
+      return ENOACK;
     }
   }
+  if(mode & STOP_BIT)
+    I2C_REG(instance_number)->CTRL = I2C_STOP;
+  else{
+    I2C_REG(instance_number)->CTRL = I2C_REPSTART;
+    while (((I2C_REG(instance_number)->CTRL_b.CTRL_PIN)!=0x00));// wait till the eight bits completely get transmitted
+  }
+  return SUCCESS;
 }
 
-#if WIRE_INTERFACES_COUNT > 0
-  /* In case new variant doesn't define these macros,
-   * we put here the ones for Arduino Zero.
-   *
-   * These values should be different on some variants!
-   */
-  #ifndef PERIPH_WIRE
-    #define PERIPH_WIRE          sercom3
-    #define WIRE_IT_HANDLER      SERCOM3_Handler
-  #endif // PERIPH_WIRE
-  arduino::TwoWire Wire(&PERIPH_WIRE, PIN_WIRE_SDA, PIN_WIRE_SCL);
-
-  void WIRE_IT_HANDLER(void) {
-    Wire.onService();
+Auint32_t I2C_Recieve(uint32_t instance_number,uint8_t slave_address,uint8_t *data,uint8_t length,uint8_t mode)
+{
+  if(instance_number>1 || instance_number<0)
+    return ENODEV;
+  if(mode & START_BIT)
+    while (!(I2C_REG(instance_number)->STATUS_b.STATUS_BB));//wait till bus is free
+  I2C_REG(instance_number)->S0=(slave_address<<1)|1;//write data in data register
+  if(mode & START_BIT)
+  I2C_REG(instance_number)->CTRL = I2C_START;// as soon as start is initiated after start bit is given slave address along with r/~w is transmitted
+  while (((I2C_REG(instance_number)->CTRL_b.CTRL_PIN)!=0x00));// wait till the eight bits completely get transmitted
+  if(!(I2C_REG(instance_number)->STATUS_b.STATUS_AD0_LRB))//check whether ack is receieved from slave
+  {
+    log_debug("\nAck received for slave address");
   }
-#endif
-
-#if WIRE_INTERFACES_COUNT > 1
-  arduino::TwoWire Wire1(&PERIPH_WIRE1, PIN_WIRE1_SDA, PIN_WIRE1_SCL);
-
-  void WIRE1_IT_HANDLER(void) {
-    Wire1.onService();
+  else
+  {
+    log_error("\nAck not received for slave address: %x",slave_address);
+    I2C_REG(instance_number)->CTRL = I2C_STOP;
+    return ENOACKDEV;
   }
-#endif
-
-#if WIRE_INTERFACES_COUNT > 2
-  arduino::TwoWire Wire2(&PERIPH_WIRE2, PIN_WIRE2_SDA, PIN_WIRE2_SCL);
-
-  void WIRE2_IT_HANDLER(void) {
-    Wire2.onService();
-  }
-#endif
-
-#if WIRE_INTERFACES_COUNT > 3
-  arduino::TwoWire Wire3(&PERIPH_WIRE3, PIN_WIRE3_SDA, PIN_WIRE3_SCL);
-
-  void WIRE3_IT_HANDLER(void) {
-    Wire3.onService();
-  }
-#endif
-
-#if WIRE_INTERFACES_COUNT > 4
-  arduino::TwoWire Wire4(&PERIPH_WIRE4, PIN_WIRE4_SDA, PIN_WIRE4_SCL);
-
-  void WIRE4_IT_HANDLER(void) {
-    Wire4.onService();
-  }
-#endif
-
-#if WIRE_INTERFACES_COUNT > 5
-  arduino::TwoWire Wire5(&PERIPH_WIRE5, PIN_WIRE5_SDA, PIN_WIRE5_SCL);
-
-  void WIRE5_IT_HANDLER(void) {
-    Wire5.onService();
-  }
-#endif
+  uint8_t dummy_read;
+    for(int i=0;i<=length;i++)
+    { 
+      if(i==0)
+      {
+        if(length == 1)
+        I2C_REG(instance_number)->CTRL = I2C_NACK;
+        dummy_read = I2C_REG(instance_number)->S0;
+        continue;
+      }
+      while (((I2C_REG(instance_number)->CTRL_b.CTRL_PIN)!=0x00));// wait till the eight bits completely get transmitted
+      if(i == length-1)
+      I2C_REG(instance_number)->CTRL = I2C_NACK;
+      data[i-1] = I2C_REG(instance_number)->S0;
+    }
+    if(mode & STOP_BIT)
+    I2C_REG(instance_number)->CTRL = I2C_STOP;
+    else{
+    I2C_REG(instance_number)->CTRL = I2C_REPSTART;
+    while (((I2C_REG(instance_number)->CTRL_b.CTRL_PIN)!=0x00));// wait till the eight bits completely get transmitted
+    }
+    return SUCCESS;
+}
