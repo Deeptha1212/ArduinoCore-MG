@@ -23,7 +23,9 @@
 
 
 #include "api/HardwareI2C.h"
+#include "RingBuffer.h"
 #include "variant.h"
+#include "i2c.h"
 
  // WIRE_HAS_END means Wire has end()
 #define WIRE_HAS_END 1
@@ -48,7 +50,7 @@ class TwoWire : public HardwareI2C
     size_t write(uint8_t data);
     size_t write(const uint8_t * data, size_t quantity);
  
-    size_t TwoWire::read(uint8_t address, RingBuffer& rxBuffer, size_t quantity);
+    size_t read(uint8_t address, RingBuffer& rxBuffer, size_t quantity);
 
     virtual int available(void);
     virtual int read(void);
@@ -70,10 +72,11 @@ class TwoWire : public HardwareI2C
     uint8_t tempBuffer[256];  // Temporary buffer to hold data for custom transmission
     uint8_t temp1[256]; 
     size_t tempBufferLength;  // To track the length of data in the tempBuffer
-    arduino::RingBufferN<256> rxBuffer;
+     bool transmissionBegun;
+    RingBufferN<256> rxBuffer;
 
     //TX buffer
-    arduino::RingBufferN<256> txBuffer;
+    RingBufferN<256> txBuffer;
     uint8_t txAddress;
 
 

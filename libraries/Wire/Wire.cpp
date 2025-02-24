@@ -26,6 +26,8 @@ extern "C" {
 #include "Wire.h"
 
 using namespace arduino;
+extern uint8_t tempBuffer[256];  
+extern uint8_t temp1[256]; 
 
 // Constructor just takes instance number
 TwoWire::TwoWire(uint8_t _instanceNumber) {
@@ -43,7 +45,6 @@ void TwoWire::begin() {
 void TwoWire::setClock(uint32_t baudrate) {
     I2C_Init(_instanceNumber, baudrate);  
 }
-
 size_t TwoWire::requestFrom(uint8_t address, size_t quantity, bool stopBit)
 {
     if (quantity == 0) {
@@ -51,29 +52,67 @@ size_t TwoWire::requestFrom(uint8_t address, size_t quantity, bool stopBit)
     }
 
     size_t byteRead = 0;
+    uint8_t temp1[quantity]; // Temporary buffer for received data
 
-   rxBuffer.clear();  // Clear the buffer before filling it with new data
-   if(I2C_Transmit(A_instanceNumber,address,tempBuffer, tempBufferLength,I2C_REPSTART)){
-      read(address, rxBuffer, quantity);
+    // Transmit a request for data
+    if (I2C_Transmit(_instanceNumber, address, nullptr, 0, REPEATED_START)) {
+        
+        // Receive data directly into temp1
+        byteRead = I2C_Recieve(_instanceNumber, address, temp1, quantity, stopBit ? STOP_BIT : REPEATED_START);
 
-      // Create a temporary array to store the data from rxBuffer
-      uint8_t temp1[quantity];
+        // Copy received data to rxBuffer if needed
+        for (size_t i = 0; i < byteRead; i++) {
+            rxBuffer.store_char(temp1[i]); // Store in buffer if required
+        }
+    }
 
-      // Copy data from rxBuffer to temp1
-      while (byteRead < quantity && rxBuffer.available()) {
-          temp1[byteRead] = read();  // Store data from rxBuffer into temp1
-          byteRead++;
-      }
-      I2C_Recieve(_instanceNumber,address, temp1, byteRead,REPEATED_START)
-      // Optionally send stop bit if required
-      if (stopBit) {
-        // Pass the temp1 array to your custom i2c_receive function
-        I2C_Recieve(_instanceNumber,address, temp1, byteRead,STOP_BIT);
-      }
-
-    return byteRead;  // Return the number of bytes read
+    return byteRead; // Return the number of bytes received
 }
+
+// Overloaded function for backward compatibility (defaults to stopBit = true)
+size_t TwoWire::requestFrom(uint8_t address, size_t quantity)
+{
+    return requestFrom(address, quantity, true); // Calls the main function with stopBit = true
 }
+
+// Initialize I2C transmission
+void TwoWire::beginTransmission(uint8_t address) {
+    txAddress = address;
+    txBuffer.clear();
+    transmissionBegun = true;
+}
+
+
+// size_t TwoWire::requestFrom(uint8_t address, size_t quantity, bool stopBit)
+// {
+//     if (quantity == 0) {
+//         return 0;
+//     }
+
+//     size_t byteRead = 0;
+
+//    rxBuffer.clear();  // Clear the buffer before filling it with new data
+//    if(I2C_Transmit(_instanceNumber,address,tempBuffer, tempBufferLength,REPEATED_START)){
+//       read(address, rxBuffer, quantity);
+
+//       // Create a temporary array to store the data from rxBuffer
+//       temp1[quantity];
+
+//       // Copy data from rxBuffer to temp1
+//       while (byteRead < quantity && rxBuffer.available()) {
+//           temp1[byteRead] = read();  // Store data from rxBuffer into temp1
+//           byteRead++;
+//       }
+//       I2C_Recieve(_instanceNumber,address, temp1, byteRead,REPEATED_START);
+//       // Optionally send stop bit if required
+//       if (stopBit) {
+//         // Pass the temp1 array to your custom i2c_receive function
+//         I2C_Recieve(_instanceNumber,address, temp1, byteRead,STOP_BIT);
+//       }
+
+//     return byteRead;  // Return the number of bytes read
+// }
+// }
 
 int TwoWire::read()
 {
@@ -90,55 +129,6 @@ int TwoWire::read()
     }
 }
 
-
-
-size_t TwoWire::requestFrom(uint8_t address, size_t quantity, bool stopBit) {
-    if (quantity == 0) {
-        return 0;  // Nothing to request
-    }
-
-    size_t bytesRead = 0;  // Count of bytes successfully read
-    
-
-    // Start transmission to request data from the slave
-    if (I2C_Transmit(instance_number,Address,tempBuffer, tempBufferLength,I2C_REPSTART)) {
-        // Read bytes from the slave
-        for (bytesRead = 0; bytesRead < quantity; ++bytesRead) {
-            uint8_t dataByte;
-             
-            // Receive a byte
-            if (!I2C_Receive(instanceNumber, &dataByte, (bytesRead < quantity - 1))) {
-                // If reception fails, stop and return the number of bytes successfully read
-                break;
-            }
-
-            // Store the received byte in the rxBuffer
-            rxBuffer.store_char(dataByte);
-        }
-
-        // If requested, send the stop condition after the transmission
-        if (stopBit) {
-            I2C_Stop(instanceNumber);
-        }
-    }
-
-    // Return the total number of bytes successfully read
-    return bytesRead;
-}
-
-size_t TwoWire::requestFrom(uint8_t address, size_t quantity)
-{
-  return requestFrom(address, quantity, true);
-}
-
-void TwoWire::beginTransmission(uint8_t address) {
-  // save address of target and clear buffer
-  txAddress = address;
-  txBuffer.clear();
-
-  transmissionBegun = true;
-}
-
 // Errors:
 //  0 : Success
 //  1 : Data too long
@@ -151,19 +141,33 @@ uint8_t TwoWire::endTransmission()
   return endTransmission(true);
 }
 
-uint8_t TwoWire::endTransmission(bool stopBit) {
-    transmissionBegun = false;
+// uint8_t TwoWire::endTransmission(bool stopBit) {
+//     transmissionBegun = false;
 
-    // If there's no data in the tempBuffer, return success
-    if (tempBufferLength == 0) {
-        return 0;  // No data to send
+//     // If there's no data in the tempBuffer, return success
+//     if (tempBufferLength == 0) {
+//         return 0;  // No data to send
+//     }
+
+//     // Call the custom transmit function with tempBuffer
+//     I2C_Transmit(_instanceNumber,txAddress,tempBuffer, tempBufferLength,REPEATED_START);
+
+//     // Clear the tempBuffer after transmission
+//     tempBufferLength = 0;
+// }
+uint8_t TwoWire::endTransmission(bool stopBit) {
+    if (!transmissionBegun) {
+        return 1; // Error: No transmission started
     }
 
-    // Call the custom transmit function with tempBuffer
-    I2C_Transmit(instance_number,Address,tempBuffer, tempBufferLength,I2C_REPSTART);
+    // Send the buffered data over I2C
+    uint8_t result = I2C_Transmit(_instanceNumber, txAddress, txBuffer._aucBuffer, txBuffer.available(), stopBit ? STOP_BIT : REPEATED_START);
 
-    // Clear the tempBuffer after transmission
-    tempBufferLength = 0;
+    // Reset transmission state
+    transmissionBegun = false;
+    tempBufferLength = 0;  // Reset buffer length after transmission
+
+    return result;  // Ensure function always returns a value
 }
 
 

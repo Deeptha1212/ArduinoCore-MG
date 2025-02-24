@@ -715,11 +715,26 @@ tian_cons.hide=true
 tian_cons.build.board=SAMD_TIAN
 
 
-#riscv
-sec-iot.name=Sec-iot Board
+# Board Name
+sec-iot.name=Sec-IoT Board
+
+# Board Identifier
+sec-iot.build.board=SEC_IOT
+
+# Upload settings
 sec-iot.upload.tool=bossac
 sec-iot.upload.protocol=serial
 sec-iot.upload.maximum_size=262144
+
+# CPU Architecture & Core Settings
 sec-iot.build.mcu=riscv64
 sec-iot.build.f_cpu=16000000L
 sec-iot.build.core=arduino
+sec-iot.build.variant=sec-iot
+
+# Compiler Flags
+sec-iot.build.defines=-D__RISCV__
+sec-iot.compiler.cpp.extra_flags=-march=rv64imafdc_zicsr -mabi=lp64 -Os
+sec-iot.compiler.c.elf.flags=-Wl,--gc-sections --specs=nosys.specs -march=rv64imafdc_zicsr -mabi=lp64 -Tflash-link.ld
+
+
