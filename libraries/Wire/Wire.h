@@ -17,12 +17,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef TwoWire_h
-#define TwoWire_h
+#ifndef WIRE_H
+#define WIRE_H
+
+
 
 #include "api/HardwareI2C.h"
 #include "variant.h"
-#include "SERCOM.h"
 
  // WIRE_HAS_END means Wire has end()
 #define WIRE_HAS_END 1
@@ -86,6 +87,7 @@ extern arduino::TwoWire Wire;
 extern arduino::TwoWire Wire1;
 
 
-#ifndef WIRE_H
-#define WIRE_H
+
+
+#endif  // WIRE_H
 

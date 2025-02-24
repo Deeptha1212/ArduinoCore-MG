@@ -19,7 +19,6 @@
 #pragma once
 
 #include "api/HardwareSerial.h"
-#include "SERCOM.h"
 #include "SafeRingBuffer.h"
 
 #ifdef SERIAL_BUFFER_SIZE

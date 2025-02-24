@@ -713,3 +713,13 @@ tian_cons.upload_port.0.pid=0xEA70
 tian_cons.descriptor.0=Standard Com Port
 tian_cons.hide=true
 tian_cons.build.board=SAMD_TIAN
+
+
+#riscv
+sec-iot.name=Sec-iot Board
+sec-iot.upload.tool=bossac
+sec-iot.upload.protocol=serial
+sec-iot.upload.maximum_size=262144
+sec-iot.build.mcu=riscv64
+sec-iot.build.f_cpu=16000000L
+sec-iot.build.core=arduino

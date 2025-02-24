@@ -18,17 +18,17 @@ compiler.optimization_flags=-Os
 compiler.optimization_flags.release=-Os
 compiler.optimization_flags.debug=-Og
 
-compiler.path={runtime.tools.riscv-gcc.path}/bin/
+compiler.path=/opt/riscv/bin/
 compiler.c.cmd=riscv64-unknown-elf-gcc
-compiler.c.flags=-c {compiler.warning_flags} {compiler.optimization_flags} -g3 -nostdlib {build.defines} -MMD -std=gnu11 -march=rv64imafd_zicsr_zifencei -mabi=lp64 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fmessage-length=0 -fno-builtin
+compiler.c.flags=-c {compiler.warning_flags} {compiler.optimization_flags} -g3 -nostdlib {build.defines} -MMD -std=gnu11 -march=rv64imafdc_zicsr -mabi=lp64 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fmessage-length=0 -fno-builtin
 compiler.c.elf.cmd=riscv64-unknown-elf-g++
-compiler.c.elf.flags=-Wl,--gc-sections --specs=nosys.specs -march=rv64imafd_zicsr_zifencei -mabi=lp64 -T link.ld
+#compiler.c.elf.flags=-Wl,--gc-sections --specs=nosys.specs -march=rv64imafdc_zicsr -mabi=lp64 -T link.ld
 # Uncomment the following line to use flash-link.ld instead
-# compiler.c.elf.flags=-Wl,--gc-sections --specs=nosys.specs -march=rv64imafd_zicsr_zifencei -mabi=lp64 -T flash-link.ld
+compiler.c.elf.flags=-Wl,--gc-sections --specs=nosys.specs -march=rv64imafdc_zicsr -mabi=lp64 -T flash-link.ld
 compiler.S.cmd=riscv64-unknown-elf-g++
-compiler.S.flags=-c -g -x assembler-with-cpp {compiler.optimization_flags} -march=rv64imafd_zicsr_zifencei -mabi=lp64 -fsigned-char -ffunction-sections -fdata-sections
+compiler.S.flags=-c -g -x assembler-with-cpp {compiler.optimization_flags} -march=rv64imafdc_zicsr -mabi=lp64 -fsigned-char -ffunction-sections -fdata-sections
 compiler.cpp.cmd=riscv64-unknown-elf-g++
-compiler.cpp.flags=-c {compiler.warning_flags} {compiler.optimization_flags} -g3 -fno-use-cxa-atexit -fno-rtti -fno-exceptions -MMD -nostdlib {build.defines} -MMD -std=gnu++17 -march=rv64imafd_zicsr_zifencei -mabi=lp64 -fsigned-char -ffunction-sections -fdata-sections -fmessage-length=0 -fno-builtin
+compiler.cpp.flags=-c {compiler.warning_flags} {compiler.optimization_flags} -march=rv64imafdc -mabi=lp64d -g3 -fno-use-cxa-atexit -fno-rtti -fno-exceptions -MMD -nostdlib {build.defines} -std=gnu++17 -fsigned-char -ffunction-sections -fdata-sections -fmessage-length=0 -fno-builtin
 compiler.ar.cmd=riscv64-unknown-elf-ar
 compiler.ar.flags=rcs
 compiler.objcopy.cmd=riscv64-unknown-elf-objcopy

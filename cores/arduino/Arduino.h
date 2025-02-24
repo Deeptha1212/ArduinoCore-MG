@@ -35,13 +35,13 @@ extern "C"{
 
 // Include Atmel headers
 #undef LITTLE_ENDIAN
-#include <samd.h>
+// #include <samd.h>
 
 #define clockCyclesPerMicrosecond() ( SystemCoreClock / 1000000L )
 #define clockCyclesToMicroseconds(a) ( ((a) * 1000L) / (SystemCoreClock / 1000L) )
 #define microsecondsToClockCycles(a) ( (a) * (SystemCoreClock / 1000000L) )
 
-#include "WVariant.h"
+// #include "WVariant.h"
 
 #ifdef __cplusplus
 } // extern "C"
@@ -106,11 +106,7 @@ extern void analogOutputInit( void ) ;
 }
 #endif
 
-// USB Device
-#include "USB/USBDesc.h"
-#include "USB/USBCore.h"
-#include "USB/USBAPI.h"
-#include "USB/USB_host.h"
+
 
 // ARM toolchain doesn't provide itoa etc, provide them
 #include "api/itoa.h"
