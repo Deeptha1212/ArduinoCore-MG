@@ -22,6 +22,7 @@
 extern "C" {
 #endif
 #include<stdint.h>
+#include "errors.h"
 #include"secure_iot.h"
 
 #define START_BIT 1<<1
