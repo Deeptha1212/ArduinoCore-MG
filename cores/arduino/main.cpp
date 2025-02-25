@@ -24,7 +24,6 @@
 void initVariant() __attribute__((weak));
 void initVariant() { }
 
-extern USBDeviceClass USBDevice;
 
 // Initialize C library
 extern "C" void __libc_init_array(void);
@@ -32,27 +31,28 @@ extern "C" void __libc_init_array(void);
 /*
  * \brief Main entry point of Arduino application
  */
-int main( void )
+int main(void)
 {
-  init();
+    init();
+    __libc_init_array();
+    initVariant();
+    delay(1);
 
-  __libc_init_array();
+    // REMOVE OR COMMENT OUT USB CODE
+    // #if defined(USBCON)
+    //   USBDevice.init();
+    //   USBDevice.attach();
+    // #endif
 
-  initVariant();
+    setup();
 
-  delay(1);
-#if defined(USBCON)
-  USBDevice.init();
-  USBDevice.attach();
-#endif
+    for (;;)
+    {
+        loop();
+        // if (arduino::serialEventRun) arduino::serialEventRun();
+    }
 
-  setup();
-
-  for (;;)
-  {
-    loop();
-    if (arduino::serialEventRun) arduino::serialEventRun();
-  }
-
-  return 0;
+    return 0;
 }
+
+
