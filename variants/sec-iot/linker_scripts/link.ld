@@ -26,11 +26,11 @@
 OUTPUT_ARCH( "riscv" )
 ENTRY(_start)
 
-_STACK_SIZE = 4K;
+_STACK_SIZE = 1K;
 
 MEMORY
 {
-  FLASH (rx)                 : ORIGIN = 0x90001000, LENGTH = 512M
+  FLASH (rx)                 : ORIGIN = 0x90000400, LENGTH = 512M
   RAM (rwx)                  : ORIGIN = 0x80000000, LENGTH = 128K
   PSRAM(rwx)                 : ORIGIN = 0xB0000000, LENGTH = 512M
 }
@@ -40,16 +40,16 @@ SECTIONS
   .text.init : 
   { 
     *(.text.init) 
-  }>FLASH
+  }>RAM
   
   . = ALIGN(8);
   
   .text : 
   { 
-      *(.text)
+    *(.text)
     . = ALIGN(8);
     *(.text.*)
-  }>FLASH
+  }>RAM
   
   . = ALIGN(8);
 
@@ -61,19 +61,7 @@ SECTIONS
     *(.gnu.linkonce.r.*)
     __rodata_end = .;
       . = ALIGN(8);
-  }>FLASH
-
-  _la_ramcode =LOADADDR(.i2c_driver);
-  .i2c_driver :
-  {
-    . = ALIGN(8);
-    __ram_code_start = .;
-    *(.i2c_driver)
-    . = ALIGN(8);
-    *(.i2c_driver.*)
-    . = ALIGN(8);
-    __ram_code_end = .;
-  }>RAM AT> FLASH
+  }>RAM
 
   _la_sdata =LOADADDR(.sdata);
   
@@ -85,13 +73,13 @@ SECTIONS
     *(.sdata .sdata.* .gnu.linkonce.s.*)
     __sdata_end = .;
       . = ALIGN(8);
-  }>RAM AT> FLASH
-
+  }>RAM AT> RAM
+  
   _la_data =LOADADDR(.data);
+  
   .data : 
   {
     __data_start = .;
-
     *(.data)
     *(.data.*)
     *(.gnu.linkonce.d.*)
@@ -102,9 +90,8 @@ SECTIONS
           *(.tbss)
       *(.tbss.end)
     _tls_end = .;
-    
     __data_end = .;
-  }>RAM AT> FLASH
+  }>RAM AT> RAM
   
   .sbss : 
   {

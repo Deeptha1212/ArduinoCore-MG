@@ -22,9 +22,7 @@ compiler.path=/opt/riscv/bin/
 compiler.c.cmd=riscv64-unknown-elf-gcc
 compiler.c.flags=-c {compiler.warning_flags} {compiler.optimization_flags} -g3 -nostdlib {build.defines} -MMD -std=gnu11 -march=rv64imafdc_zicsr -mabi=lp64 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fmessage-length=0 -fno-builtin
 compiler.c.elf.cmd=riscv64-unknown-elf-g++
-compiler.c.elf.flags=-Wl,--gc-sections --specs=nosys.specs -T flash-link.ld
-# Uncomment the following line to use flash-link.ld instead
-compiler.c.elf.flags=-Wl,--gc-sections --specs=nosys.specs -march=rv64imafdc_zicsr -mabi=lp64 -T flash-link.ld
+compiler.c.elf.flags=-Wl,--gc-sections --specs=nosys.specs {build.extra_ldflags}
 compiler.S.cmd=riscv64-unknown-elf-gcc
 compiler.S.flags=-c -g -x assembler-with-cpp {compiler.optimization_flags} -march=rv64imafdc_zicsr -mabi=lp64 -fsigned-char -ffunction-sections -fdata-sections
 compiler.cpp.cmd=riscv64-unknown-elf-g++
@@ -59,10 +57,7 @@ recipe.S.o.pattern="{compiler.path}{compiler.S.cmd}" {compiler.S.flags} -DARDUIN
 recipe.ar.pattern="{compiler.path}{compiler.ar.cmd}" {compiler.ar.flags} "{archive_file_path}" "{object_file}"
 
 ## Linker
-recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} {build.extra_flags} -o "{build.path}/{build.project_name}.elf" "-L{build.path}" {object_files} -Wl,--whole-archive -Wl,--start-group "{build.path}/{archive_file}" -Wl,--no-whole-archive -Wl,--end-group "-Wl,-Map,{build.path}/{build.project_name}.map"
-#recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} {build.extra_flags} -o "{build.path}/{build.project_name}.elf" "-L{build.path}" "-T link.ld" {object_files} -Wl,--whole-archive -Wl,--start-group "{build.path}/{archive_file}" -Wl,--no-whole-archive -Wl,--end-group "-Wl,-Map,{build.path}/{build.project_name}.map"
-# Uncomment the following line to use flash-link.ld instead
-# recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} {build.extra_flags} -o "{build.path}/{build.project_name}.elf" "-L{build.path}" "-T flash-link.ld" {object_files} -Wl,--whole-archive -Wl,--start-group "{build.path}/{archive_file}" -Wl,--no-whole-archive -Wl,--end-group "-Wl,-Map,{build.path}/{build.project_name}.map"
+recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} {build.extra_flags} -o "{build.path}/{build.project_name}.elf" "-L{build.path}" "-T{runtime.platform.path}/cores/arduino/variants/sec-iot/link.ld" {object_files} -Wl,--whole-archive -Wl,--start-group "{build.path}/{archive_file}" -Wl,--no-whole-archive -Wl,--end-group "-Wl,-Map,{build.path}/{build.project_name}.map"
 
 ## Convert ELF to BIN
 recipe.objcopy.bin.pattern="{compiler.path}{compiler.elf2hex.cmd}" {compiler.elf2hex.bin.flags} "{build.path}/{build.project_name}.elf" "{build.path}/{build.project_name}.bin"

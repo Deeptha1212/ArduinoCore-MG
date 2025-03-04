@@ -736,5 +736,5 @@ sec-iot.build.variant=sec-iot
 sec-iot.build.defines=-D__RISCV__
 sec-iot.compiler.cpp.extra_flags=-march=rv64imafdc_zicsr -mabi=lp64 -Os
 sec-iot.compiler.c.elf.flags=-Wl,--gc-sections --specs=nosys.specs -march=rv64imafdc_zicsr -mabi=lp64 -Tflash-link.ld
-
+build.linker_script={runtime.platform.path}/cores/arduino/variants/sec-iot/link.ld
 
