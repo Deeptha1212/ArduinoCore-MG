@@ -18,6 +18,9 @@
  */
 
 #include "i2c.h"
+#include "secure_iot.h"
+
+extern volatile uint64_t CLOCK_FREQUENCY_BASE=40000000UL;
 // #include"gptimer.h"
 /*Necessary macros for I2C driver*/
 #define I2C_PIN 0x80

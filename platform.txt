@@ -18,37 +18,41 @@ compiler.optimization_flags=-Os
 compiler.optimization_flags.release=-Os
 compiler.optimization_flags.debug=-Og
 
-compiler.path=/opt/riscv/bin/
-compiler.c.cmd=riscv64-unknown-elf-gcc
-compiler.c.flags=-c {compiler.warning_flags} {compiler.optimization_flags} -g3 -nostdlib {build.defines} -MMD -std=gnu11 -march=rv64imafdc_zicsr -mabi=lp64 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fmessage-length=0 -fno-builtin
-compiler.c.elf.cmd=riscv64-unknown-elf-g++
-compiler.c.elf.flags=-Wl,--gc-sections --specs=nosys.specs {build.extra_ldflags}
-compiler.S.cmd=riscv64-unknown-elf-gcc
-compiler.S.flags=-c -g -x assembler-with-cpp {compiler.optimization_flags} -march=rv64imafdc_zicsr -mabi=lp64 -fsigned-char -ffunction-sections -fdata-sections
-compiler.cpp.cmd=riscv64-unknown-elf-g++
-compiler.cpp.flags=-c {compiler.warning_flags} {compiler.optimization_flags} -march=rv64imafdc -mabi=lp64d -g3 -fno-use-cxa-atexit -fno-rtti -fno-exceptions -MMD -nostdlib {build.defines} -std=gnu++17 -fsigned-char -ffunction-sections -fdata-sections -fmessage-length=0 -fno-builtin
-compiler.ar.cmd=riscv64-unknown-elf-ar
+compiler.c.extra_flags=-march=rv64imac -mabi=lp64d
+compiler.cpp.extra_flags=-march=rv64imac -mabi=lp64d
+compiler.S.extra_flags=-march=rv64imac -mabi=lp64d
+
+compiler.c.elf.flags=  -nostdlib -nodefaultlibs -nostartfiles -Wl,-z,noexecstack,--gc-sections -Wl,--exclude-libs,ALL {build.extra_ldflags}
+compiler.c.flags=-c -fPIC -mcmodel=medany {compiler.warning_flags} {compiler.optimization_flags} -g3 -nostdlib {build.defines} -MMD -std=gnu11 -march=rv64imafdc_zicsr -mabi=lp64d -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fmessage-length=0 -fno-builtin
+compiler.cpp.flags=-c {compiler.warning_flags} {compiler.optimization_flags} -fPIC -mcmodel=medany -march=rv64imafdc -mabi=lp64d -g3 -fno-use-cxa-atexit -fno-rtti -fno-exceptions -MMD -nostdlib {build.defines} -std=gnu++17 -fsigned-char -ffunction-sections -fdata-sections -fmessage-length=0 -fno-builtin
+compiler.S.flags=-c -g -x assembler-with-cpp {compiler.optimization_flags} -march=rv64imafdc_zicsr -mabi=lp64d -fsigned-char -ffunction-sections -fdata-sections
 compiler.ar.flags=rcs
-compiler.objcopy.cmd=riscv64-unknown-elf-objcopy
+
+
 compiler.elf2hex.bin.flags=-O binary -j .text -j .data
 compiler.elf2hex.hex.flags=-O ihex -j .text -j .data
+
+compiler.path=/opt/riscv/bin/
+compiler.c.cmd=riscv64-unknown-elf-gcc
+compiler.c.elf.cmd=riscv64-unknown-elf-g++
+compiler.S.cmd=riscv64-unknown-elf-gcc
+compiler.cpp.cmd=riscv64-unknown-elf-g++
+compiler.ar.cmd=riscv64-unknown-elf-ar
+compiler.objcopy.cmd=riscv64-unknown-elf-objcopy
+
 compiler.size.cmd=riscv64-unknown-elf-size
 compiler.define=-DARDUINO=
 build.extra_flags=
 build.extra_ldflags=
 compiler.S.extra_flags=
 
+
+
 # Compile Patterns
 # -----------------------
 
 recipe.c.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.c.flags} {includes} -c "{source_file}" -o "{object_file}" 
 recipe.cpp.o.pattern="{compiler.path}{compiler.cpp.cmd}" {compiler.cpp.flags} {includes} -c "{source_file}" -o "{object_file}"
-
-## Compile C files
-#recipe.c.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.c.flags} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} -DARDUINO_ARCH_RISCV {compiler.c.extra_flags} {build.extra_flags} {includes} -o "{object_file}" "{source_file}"
-
-## Compile C++ files
-#recipe.cpp.o.pattern="{compiler.path}{compiler.cpp.cmd}" {compiler.cpp.flags} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} -DARDUINO_ARCH_RISCV {compiler.cpp.extra_flags} {build.extra_flags} {includes} "{source_file}" -o "{object_file}"
 
 ## Compile Assembly files
 recipe.S.o.pattern="{compiler.path}{compiler.S.cmd}" {compiler.S.flags} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} -DARDUINO_ARCH_RISCV {includes} {build.extra_flags} {compiler.S.extra_flags} "{source_file}" -o "{object_file}"
@@ -57,7 +61,8 @@ recipe.S.o.pattern="{compiler.path}{compiler.S.cmd}" {compiler.S.flags} -DARDUIN
 recipe.ar.pattern="{compiler.path}{compiler.ar.cmd}" {compiler.ar.flags} "{archive_file_path}" "{object_file}"
 
 ## Linker
-recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} {build.extra_flags} -o "{build.path}/{build.project_name}.elf" "-L{build.path}" "-T{runtime.platform.path}/cores/arduino/variants/sec-iot/link.ld" {object_files} -Wl,--whole-archive -Wl,--start-group "{build.path}/{archive_file}" -Wl,--no-whole-archive -Wl,--end-group "-Wl,-Map,{build.path}/{build.project_name}.map"
+#recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} {build.extra_flags} -o "{build.path}/{build.project_name}.elf" "-L{build.path}" "-T{runtime.platform.path}/variants/sec-iot/linker_scripts/link.ld" {object_files} -Wl,--whole-archive -Wl,--start-group "{build.path}/{archive_file}" -Wl,--no-whole-archive -Wl,--end-group "-Wl,-Map,{build.path}/{build.project_name}.map"
+recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} {build.extra_flags} -o "{build.path}/{build.project_name}.elf" "-L{build.path}" "-T{runtime.platform.path}/variants/sec-iot/linker_scripts/link.ld" {object_files}  -Wl,--whole-archive -Wl,--start-group "{build.path}/{archive_file}" -Wl,--no-whole-archive -Wl,--end-group "-Wl,-Map,{build.path}/{build.project_name}.map"
 
 ## Convert ELF to BIN
 recipe.objcopy.bin.pattern="{compiler.path}{compiler.elf2hex.cmd}" {compiler.elf2hex.bin.flags} "{build.path}/{build.project_name}.elf" "{build.path}/{build.project_name}.bin"
