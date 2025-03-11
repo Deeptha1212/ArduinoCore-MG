@@ -1,82 +1,96 @@
 #include "HardwareSerial.h"
 #include "uart.h"
-namespace arduino {
-    
-extern uint8_t instance;
-class Serial  {
 
+namespace arduino {
+
+class Serial {
 private:
-    // RISC-V specific UART registers and configuration variables
+    uint8_t instance;
     SafeRingBufferN<SERIAL_BUFFER_SIZE> rxBuffer;
     SafeRingBufferN<SERIAL_BUFFER_SIZE> txBuffer;
-    
+    UART_Config_t uart_config;  // Store configuration persistently
+
 public:
-    Serial(uint8_t instanceno) {
-        instance = instanceno;
-    }
+    Serial(uint8_t instanceno) : instance(instanceno) {}
 
     void begin(unsigned long baudRate) override {
-        // Set up UART baud rate, control registers, etc. based on your RISC-V hardware
-       begin(baudRate,SERIAL_8N1)
+        begin(baudRate, SERIAL_8N1);  // Default config
     }
-    
+
     void begin(unsigned long baudRate, uint16_t config) override {
-        // Configure baud rate, parity, stop bits, etc. using 'config'
-        UART_Config_t *uart_config;
-        uart_config->uart_num=instance;
-        uart_config->baudrate=baudRate;
-        uart_config->delay=0;
-        uart_config->pullup=1;
-        uart_config->transfer_mode=2;
-        uart_config->receive_mode=2;
-        switch(){
-            
+        uart_config.uart_num = instance;
+        uart_config.baudrate = baudRate;
+        uart_config.delay = 0;
+        uart_config.pullup = 1;
+        uart_config.transfer_mode = DATA_SIZE_8;
+
+        // Configure character size
+        if (config & SERIAL_DATA_5) {
+            uart_config.char_size = 5;
+        } else if (config & SERIAL_DATA_6) {
+            uart_config.char_size = 6;
+        } else if (config & SERIAL_DATA_7) {
+            uart_config.char_size = 7;
+        } else {
+            uart_config.char_size = 8;
         }
 
+        // Configure parity
+        if (config & SERIAL_PARITY_EVEN) {
+            uart_config.parity = 2;
+        } else if (config & SERIAL_PARITY_ODD) {
+            uart_config.parity = 1;
+        } else {
+            uart_config.parity = 0;
+        }
+
+        // Configure stop bits
+        if (config & SERIAL_STOP_BIT_2) {
+            uart_config.stop_bits = 2;
+        } else {
+            uart_config.stop_bits = 1;
+        }
+
+        // Initialize UART
+        UART_Init(&uart_config);
     }
-    
+
     void end() override {
-        // Disable UART and clear any configurations
+        UART_Disable(instance);  // Disable UART
     }
-    
+
     int available() override {
-        UART_Available();
-        // Return the number of bytes available in the receive buffer
-        return rxBuffer.available();
+        return UART_Available(uart_config);
     }
 
     int peek() override {
-        // Peek at the next byte in the receive buffer
         return rxBuffer.peek();
     }
 
     int read() override {
-        // Read a byte from the receive buffer
         return rxBuffer.read();
     }
 
     void flush() override {
-        // Wait until all data has been transmitted (if using TX buffer)
+        UART_Flush(uart_config);
     }
 
     size_t write(uint8_t data) override {
-        // Write data to the UART transmit register and handle TX buffer
-        txBuffer.write(data);
-        return 1;  // Return the number of bytes written
+        struct uart_buf tx = { .uart_data = data, .len = StrLen(data)/2};
+        UART_Write(uart_config,&tx);  // Send data via UART
     }
 
     operator bool() override {
-        // Return true if the UART is initialized and functional
-        return uart_base != nullptr;
+        return UART_IsInitialized(instance);
     }
 
     void IrqHandler() {
-        // RISC-V interrupt handler for UART, read data from UART register into rxBuffer
-        // Handle interrupts (e.g., data received or transmission complete)
+        // Handle UART interrupts
     }
 };
 
 }  // namespace arduino
 
-arduino::Serial Serial0(0);  // Initialize Wire0 on bus 0
-arduino::Serial Serial1(1);  // Initialize Wire0 on bus 0
+// Create instances
+arduino::Serial Serial0(0);
+arduino::Serial Serial1(1);
