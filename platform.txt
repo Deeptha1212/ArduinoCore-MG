@@ -61,32 +61,8 @@ recipe.S.o.pattern="{compiler.path}{compiler.S.cmd}" {compiler.S.flags} -DARDUIN
 recipe.ar.pattern="{compiler.path}{compiler.ar.cmd}" {compiler.ar.flags} "{archive_file_path}" "{object_file}"
 
 ## Linker
-#recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} {build.extra_flags} -o "{build.path}/{build.project_name}.elf" "-L{build.path}" "-T{runtime.platform.path}/variants/sec-iot/linker_scripts/link.ld" {object_files} -Wl,--whole-archive -Wl,--start-group "{build.path}/{archive_file}" -Wl,--no-whole-archive -Wl,--end-group "-Wl,-Map,{build.path}/{build.project_name}.map"
 recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} {build.extra_flags} -o "{build.path}/{build.project_name}.elf" "-L{build.path}" "-T{runtime.platform.path}/variants/sec-iot/linker_scripts/link.ld" {object_files}  -Wl,--whole-archive -Wl,--start-group "{build.path}/{archive_file}" -Wl,--no-whole-archive -Wl,--end-group "-Wl,-Map,{build.path}/{build.project_name}.map"
 
-## Convert ELF to BIN
-recipe.objcopy.bin.pattern="{compiler.path}{compiler.elf2hex.cmd}" {compiler.elf2hex.bin.flags} "{build.path}/{build.project_name}.elf" "{build.path}/{build.project_name}.bin"
-
-## Convert ELF to HEX
-recipe.objcopy.hex.pattern="{compiler.path}{compiler.elf2hex.cmd}" {compiler.elf2hex.hex.flags} "{build.path}/{build.project_name}.elf" "{build.path}/{build.project_name}.hex"
 
 ## Compute size
 recipe.size.pattern="{compiler.path}{compiler.size.cmd}" -A "{build.path}/{build.project_name}.elf"
-
-# Flashing Tool (flashrom)
-tools.flashrom.path={runtime.tools.flashrom.path}
-tools.flashrom.cmd=flashrom
-tools.flashrom.upload.pattern="{path}/{cmd}" -p ft2232_spi:type=2232H,port=A -c W25Q32JV --wp-disable -l "{build.path}/layout.txt" -i flash -w "{build.path}/code.bin"
-
-
-# Debugging
-debug.executable={build.path}/{build.project_name}.elf
-debug.toolchain=riscv-gcc
-debug.toolchain.path={runtime.tools.riscv64-unknown-elf-gcc.path}/bin/
-debug.toolchain.prefix=riscv64-unknown-elf
-debug.server=openocd
-debug.server.openocd.path={runtime.tools.openocd-riscv.path}/bin/openocd
-debug.server.openocd.scripts_dir={runtime.tools.openocd-riscv.path}/share/openocd/scripts/
-debug.cortex-debug.custom.postAttachCommands.0=monitor reset halt
-debug.cortex-debug.custom.overrideRestartCommands.0=monitor reset halt
-debug.cortex-debug.custom.request=attach

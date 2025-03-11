@@ -63,7 +63,7 @@ int _link(const char *old, const char *new) {
 }
 
 int _fork(void) {
-    return -1;
+    return 0;
 }
 
 int _execve(const char *name, char *const argv[], char *const env[]) {

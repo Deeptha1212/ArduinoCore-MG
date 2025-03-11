@@ -1,29 +1,15 @@
-/*
-  HardwareSerial.h - Hardware serial interface for Arduino
-  Copyright (c) 2016 Arduino LLC.  All right reserved.
-
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
-
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
-
 #pragma once
 
 #include <inttypes.h>
 #include "Stream.h"
+#include "SafeRingBuffer.h"
+
+
+#endif
 
 namespace arduino {
 
+// UART configuration settings (you might want to adjust these for your RISC-V platform)
 // XXX: Those constants should be defined as const int / enums?
 // XXX: shall we use namespaces too?
 #define SERIAL_PARITY_EVEN   (0x1ul)
@@ -87,20 +73,58 @@ namespace arduino {
 
 class HardwareSerial : public Stream
 {
-  public:
-    virtual void begin(unsigned long) = 0;
-    virtual void begin(unsigned long baudrate, uint16_t config) = 0;
+public:
+    // Constructor: Must initialize the platform-specific hardware (UART)
+    virtual void begin(unsigned long baudRate) = 0;
+    virtual void begin(unsigned long baudRate, uint16_t config) = 0;
+    
+    // End the UART communication
     virtual void end() = 0;
-    virtual int available(void) = 0;
-    virtual int peek(void) = 0;
-    virtual int read(void) = 0;
-    virtual void flush(void) = 0;
-    virtual size_t write(uint8_t) = 0;
-    using Print::write; // pull in write(str) and write(buf, size) from Print
+    
+    // UART data handling functions
+    virtual int available() = 0;
+    virtual int peek() = 0;
+    virtual int read() = 0;
+    virtual void flush() = 0;
+    virtual size_t write(uint8_t data) = 0;
+        
+    // Operator bool to check if the serial interface is available
     virtual operator bool() = 0;
+private:
+    uint8_t instance; 
+    typedef struct 
+    {
+	
+	    uint8_t uart_num ;/*An Integer type parameter, which gets the uart number 
+	  * from the user needed to be initialized. This is usually, 1 and 2, as
+	  * the 0th instance is occupied for the serial communication.*/
+
+	    unsigned int baudrate; //The desired baud rate for the UART communication.
+
+	    uint8_t stop_bits : 2; //An integer type, which is of 2 bits. The value can be from 0-2, and 3 is undefined.
+
+	    uint8_t parity : 2; //An integer type, which is again of 2 bits. The value can be from 0-2, and 3 is undefined.
+
+	    uint8_t char_size : 2; //An integer type, which is of 2 bits. The values to be given are 5,6,7 and 8.
+
+	    unsigned short delay; // Delay value
+
+	    unsigned char rxthreshold;/*The value of the receive (RX) threshold for a UART instance. This 
+                              * value is used to set the RX Threshold value of RX FIFO.*/
+
+	    uint8_t transfer_mode : 3;
+
+	    uint8_t receive_mode : 3 ;
+
+	    uint8_t pullup : 1;
+
+    }UART_Config_t;
 };
 
-// XXX: Are we keeping the serialEvent API?
+// Weak definition for serialEventRun (if used)
 extern void serialEventRun(void) __attribute__((weak));
 
-}
+}  // namespace arduino
+
+extern arduino::Serial Serial0;
+extern arduino::Serial Serial1;

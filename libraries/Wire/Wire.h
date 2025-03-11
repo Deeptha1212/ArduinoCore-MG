@@ -29,14 +29,13 @@
 
  // WIRE_HAS_END means Wire has end()
 #define WIRE_HAS_END 1
-
+volatile uint8_t _instanceNumber; 
 namespace arduino {
 
 class TwoWire : public HardwareI2C
 {
   public:
     TwoWire(uint8_t _instanceNumber);
-    
     void begin() override;
     void begin(uint8_t address) override;
     void end() override;
@@ -72,7 +71,7 @@ class TwoWire : public HardwareI2C
  private:
      // Store the instance number
     // RX Buffer
-    uint8_t _instanceNumber; 
+   
     uint8_t tempBuffer[256];  // Temporary buffer to hold data for custom transmission
     uint8_t temp1[256]; 
     size_t tempBufferLength;  // To track the length of data in the tempBuffer
@@ -90,7 +89,7 @@ class TwoWire : public HardwareI2C
 
 }
 
-extern arduino::TwoWire Wire;
+extern arduino::TwoWire Wire0;
 extern arduino::TwoWire Wire1;
 
 

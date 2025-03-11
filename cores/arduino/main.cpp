@@ -18,6 +18,7 @@
 
 #define ARDUINO_MAIN
 #include "Arduino.h"
+#include "wiring.h"
 
 // Weak empty variant initialization function.
 // May be redefined by variant files.

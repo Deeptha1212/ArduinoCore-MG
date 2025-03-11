@@ -29,6 +29,7 @@ using namespace arduino;
 extern uint8_t tempBuffer[256];  
 extern uint8_t temp1[256]; 
 
+extern volatile uint8_t _instanceNumber;
 
 // Constructor just takes instance number
 TwoWire::TwoWire(uint8_t _instanceNumber) {
@@ -184,8 +185,6 @@ uint8_t TwoWire::endTransmission(bool stopBit) {
     return result;  // Ensure function always returns a value
 }
 
-
-
 size_t TwoWire::write(uint8_t ucData)
 {
     // No writing if transmission hasn't begun or if the buffer is full
@@ -251,5 +250,7 @@ void TwoWire::flush(void)
   // data transfer.
 }
 
+arduino::TwoWire Wire0(0);  // Initialize Wire0 on bus 0
+arduino::TwoWire Wire1(1);  // Initialize Wire1 on bus 1
 
 

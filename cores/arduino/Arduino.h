@@ -1,6 +1,6 @@
 /*
   Arduino.h - Main include file for the Arduino SDK
-  Copyright (c) 2014 Arduino LLC.  All right reserved.
+  Copyright (c) 2005-2013 Arduino Team.  All right reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -20,95 +20,55 @@
 #ifndef Arduino_h
 #define Arduino_h
 
-#include "api/ArduinoAPI.h"
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include <stdint.h>
+#include <stdbool.h>
 
-#define RAMSTART (HMCRAMC0_ADDR)
-#define RAMSIZE  (HMCRAMC0_SIZE)
-#define RAMEND   (RAMSTART + RAMSIZE - 1)
+// some libraries and sketches depend on this
+// AVR stuff, assuming Arduino.h or WProgram.h
+// automatically includes it...
+
+
+
 
 #ifdef __cplusplus
-
-using namespace arduino;
-
 extern "C"{
 #endif // __cplusplus
 
-// Include Atmel headers
-#undef LITTLE_ENDIAN
-// #include <samd.h>
+
+
+#define	SystemCoreClock F_CPU
 
 #define clockCyclesPerMicrosecond() ( SystemCoreClock / 1000000L )
 #define clockCyclesToMicroseconds(a) ( ((a) * 1000L) / (SystemCoreClock / 1000L) )
 #define microsecondsToClockCycles(a) ( (a) * (SystemCoreClock / 1000000L) )
 
-// #include "WVariant.h"
+void yield(void);
+
+/* sketch */
+extern void setup( void ) ;
+extern void loop( void ) ;
+
+typedef void (*voidFuncPtr)( void ) ;
+
+/* Define attribute */
+#define WEAK __attribute__ ((weak))
 
 #ifdef __cplusplus
 } // extern "C"
-#endif
+
+
+
+#endif // __cplusplus
 
 // Include board variant
 #include "variant.h"
 
-#define interrupts()    __enable_irq()
-#define noInterrupts()  __disable_irq()
-
-#if (ARDUINO_SAMD_VARIANT_COMPLIANCE >= 10606)
-// Interrupts
-#define digitalPinToInterrupt(P)   ( P )
-#endif
-
-// undefine stdlib's abs if encountered
-#ifdef abs
-#undef abs
-#endif // abs
-
-#define abs(x) ((x)>0?(x):-(x))
-
-// Allows publishing the Beta core under samd-beta / arduino organization
-#ifndef ARDUINO_ARCH_SAMD
-#define ARDUINO_ARCH_SAMD
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-/*
- * \brief SAMD products have only one reference for ADC
- */
-typedef enum _eAnalogReference
-{
-  AR_DEFAULT,
-  AR_INTERNAL,
-  AR_EXTERNAL,
-  AR_INTERNAL1V0,
-  AR_INTERNAL1V65,
-  AR_INTERNAL2V23
-} eAnalogReference ;
-
-/*
- * \brief Set the resolution of analogRead return values. Default is 10 bits (range from 0 to 1023).
- *
- * \param res
- */
-extern void analogReadResolution(int res);
-
-/*
- * \brief Set the resolution of analogWrite parameters. Default is 8 bits (range from 0 to 255).
- *
- * \param res
- */
-extern void analogWriteResolution(int res);
-
-extern void analogOutputInit( void ) ;
-
-#ifdef __cplusplus
-}
-#endif
-
-
-
-// ARM toolchain doesn't provide itoa etc, provide them
-#include "api/itoa.h"
+// #include "wiring_digital.h"
+// #include "wiring_analog.h"
+// #include "wiring_shift.h"
+// #include "WInterrupts.h"
 
 #endif // Arduino_h
