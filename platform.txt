@@ -1,4 +1,3 @@
-#
 # For more info:
 # https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5---3rd-party-Hardware-specification
 
@@ -28,7 +27,6 @@ compiler.cpp.flags=-c {compiler.warning_flags} {compiler.optimization_flags} -fP
 compiler.S.flags=-c -g -x assembler-with-cpp {compiler.optimization_flags} -march=rv64imafdc_zicsr -mabi=lp64d -fsigned-char -ffunction-sections -fdata-sections
 compiler.ar.flags=rcs
 
-
 compiler.elf2hex.bin.flags=-O binary -j .text -j .data
 compiler.elf2hex.hex.flags=-O ihex -j .text -j .data
 
@@ -46,12 +44,10 @@ build.extra_flags=
 build.extra_ldflags=
 compiler.S.extra_flags=
 
-
-
 # Compile Patterns
 # -----------------------
 
-recipe.c.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.c.flags} {includes} -c "{source_file}" -o "{object_file}" 
+recipe.c.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.c.flags} {includes} -c "{source_file}" -o "{object_file}"
 recipe.cpp.o.pattern="{compiler.path}{compiler.cpp.cmd}" {compiler.cpp.flags} {includes} -c "{source_file}" -o "{object_file}"
 
 ## Compile Assembly files
@@ -61,8 +57,7 @@ recipe.S.o.pattern="{compiler.path}{compiler.S.cmd}" {compiler.S.flags} -DARDUIN
 recipe.ar.pattern="{compiler.path}{compiler.ar.cmd}" {compiler.ar.flags} "{archive_file_path}" "{object_file}"
 
 ## Linker
-recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} {build.extra_flags} -o "{build.path}/{build.project_name}.elf" "-L{build.path}" "-T{runtime.platform.path}/variants/sec-iot/linker_scripts/link.ld" {object_files}  -Wl,--whole-archive -Wl,--start-group "{build.path}/{archive_file}" -Wl,--no-whole-archive -Wl,--end-group "-Wl,-Map,{build.path}/{build.project_name}.map"
-
+recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} {build.extra_flags} -o "{build.path}/{build.project_name}.elf" "-L{build.path}" "-T{runtime.platform.path}/variants/{build.variant}/linker_scripts/link.ld" {object_files} -Wl,--whole-archive -Wl,--start-group "{build.path}/{archive_file}" -Wl,--no-whole-archive -Wl,--end-group -Wl,-Map={build.path}/{build.project_name}.map
 
 ## Compute size
-recipe.size.pattern="{compiler.path}{compiler.size.cmd}" -A "{build.path}/{build.project_name}.elf"
+recipe.size.pattern="{compiler.path}riscv64-unknown-elf-size" -A "{build.path}/{build.project_name}.elf"

@@ -24,6 +24,8 @@
 #include <string.h>
 #include <math.h>
 #include <stdint.h>
+// #include "cores/arduino/api/HardwareSerial.h"
+
 #include <stdbool.h>
 
 // some libraries and sketches depend on this

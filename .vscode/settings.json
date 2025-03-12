@@ -9,6 +9,7 @@
         "ostream": "cpp",
         "syscall.h": "c",
         "stat.h": "c",
-        "arduino.h": "c"
+        "arduino.h": "c",
+        "hardwareserial.h": "c"
     }
 }

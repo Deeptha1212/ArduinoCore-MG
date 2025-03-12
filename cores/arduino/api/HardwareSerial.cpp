@@ -1,90 +1,91 @@
 #include "HardwareSerial.h"
 #include "uart.h"
+#include <cstdlib>  // For malloc/free
 
 namespace arduino {
 
-class Serial {
-private:
-    uint8_t instance;
-    SafeRingBufferN<SERIAL_BUFFER_SIZE> rxBuffer;
-    SafeRingBufferN<SERIAL_BUFFER_SIZE> txBuffer;
-    UART_Config_t *uart_config;  // Pointer to store UART configuration
+// Constructor
+HardwareSerial::HardwareSerial(uint8_t instanceno) : instance(instanceno), uart_config(nullptr) {}
 
-public:
-    Serial(uint8_t instanceno) : instance(instanceno), uart_config(nullptr) {}
+// Initialize UART with baud rate only
+void HardwareSerial::begin(unsigned long baudRate) {
+    begin(baudRate, SERIAL_8N1);  // Default config
+}
 
-    void begin(unsigned long baudRate) override {
-        begin(baudRate, SERIAL_8N1);  // Default config
+// Initialize UART with baud rate and config
+void HardwareSerial::begin(unsigned long baudRate, uint16_t config) {
+    // Allocate memory if not already allocated
+    if (!uart_config) {
+        uart_config = (UART_Config_t*)malloc(sizeof(UART_Config_t));
+        if (!uart_config) return;  // Memory allocation failed
     }
 
-    void begin(unsigned long baudRate, uint16_t config) override {
-        UART_Config_t *uart_config;
+    uart_config->uart_num = instance;
+    uart_config->baudrate = baudRate;
+    uart_config->delay = 0;
+    uart_config->pullup = 1;
+    uart_config->transfer_mode = DATA_SIZE_8;
 
-        uart_config->uart_num = instance;
-        uart_config->baudrate = baudRate;
-        uart_config->delay = 0;
-        uart_config->pullup = 1;
-        uart_config->transfer_mode = DATA_SIZE_8;
+    // Configure character size
+    uart_config->char_size = (config & SERIAL_DATA_5) ? 5 :
+                             (config & SERIAL_DATA_6) ? 6 :
+                             (config & SERIAL_DATA_7) ? 7 : 8;
 
-        // Configure character size
-        if (config & SERIAL_DATA_5) {
-            uart_config->char_size = 5;
-        } else if (config & SERIAL_DATA_6) {
-            uart_config->char_size = 6;
-        } else if (config & SERIAL_DATA_7) {
-            uart_config->char_size = 7;
-        } else {
-            uart_config->char_size = 8;
-        }
+    // Configure parity
+    uart_config->parity = (config & SERIAL_PARITY_EVEN) ? 2 :
+                          (config & SERIAL_PARITY_ODD) ? 1 : 0;
 
-        // Configure parity
-        if (config & SERIAL_PARITY_EVEN) {
-            uart_config->parity = 2;
-        } else if (config & SERIAL_PARITY_ODD) {
-            uart_config->parity = 1;
-        } else {
-            uart_config->parity = 0;
-        }
+    // Configure stop bits
+    uart_config->stop_bits = (config & SERIAL_STOP_BIT_2) ? 2 : 1;
 
-        // Configure stop bits
-        if (config & SERIAL_STOP_BIT_2) {
-            uart_config->stop_bits = 2;
-        } else {
-            uart_config->stop_bits = 1;
-        }
+    // Initialize UART
+    UART_Init(uart_config);
+}
 
-        // Initialize UART
-        UART_Init(uart_config);
+// End communication
+void HardwareSerial::end() {
+    if (uart_config) {
+        uart_config->baudrate = 0;  // Disable UART
+        free(uart_config);          // Free allocated memory
+        uart_config = nullptr;      // Avoid dangling pointer
+    }
+}
+
+// Check available bytes
+int HardwareSerial::available() {
+    return uart_config ? UART_Available(uart_config) : 0;
+}
+
+// Peek next byte
+int HardwareSerial::peek() {
+    return -1;
+}
+
+// Read a byte
+int HardwareSerial::read() {
+    if (!uart_config) return -1;
+
+    uint8_t a;
+    struct uart_buf rx = { .uart_data = &a, .len = 1 };
+
+    if (UART_Read_Character(uart_config, &rx) <= 0) {
+        return -1;  // No data available
     }
 
-    void end() override {
-       return -1;
-    }
+    return a;
+}
 
-    int available() override {
-        return uart_config ? UART_Available(uart_config) : 0;
-    }
+// Flush UART buffer
+void HardwareSerial::flush() {
+    if (uart_config) UART_Flush(uart_config);
+}
 
-    int peek() override {
-        return rxBuffer.peek();
-    }
+// Write a byte
+size_t HardwareSerial::write(uint8_t data) {
+    if (!uart_config) return 0;
 
-    int read() override {
-          struct uart_buf rx = { .uart_data = &a, .len = x};
-          return UART_Read_Character(uart_config->uart_num);
-    }
-
-    void flush() override {
-        if (uart_config) {
-            UART_Flush(uart_config);
-        }
-    }
-
-    size_t write(uint8_t data) override {
-        if (!uart_config) return 0;
-        struct uart_buf tx = { .uart_data = data, .len = StrLen(data) / 2 };
-        return UART_Write(uart_config, &tx);  // Send data via UART
-    }
-};
+    struct uart_buf tx = { .uart_data = &data, .len = 1 };
+    return UART_Write(uart_config, &tx);
+}
 
 }  // namespace arduino

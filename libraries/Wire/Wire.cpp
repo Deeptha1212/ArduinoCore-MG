@@ -29,7 +29,7 @@ using namespace arduino;
 extern uint8_t tempBuffer[256];  
 extern uint8_t temp1[256]; 
 
-extern volatile uint8_t _instanceNumber;
+int _instanceNumber;
 
 // Constructor just takes instance number
 TwoWire::TwoWire(uint8_t _instanceNumber) {
@@ -62,13 +62,12 @@ void TwoWire::setClock(uint32_t baudrate) {
 }
 size_t TwoWire::requestFrom(uint8_t address, size_t quantity, bool stopBit)
 {
-    if (quantity == 0) {
+    if (quantity <0 && quantity==0) {
         return 0;
     }
 
     size_t byteRead = 0;
-    uint8_t temp1[quantity]; // Temporary buffer for received data
-
+     uint8_t temp1[256];
     // Transmit a request for data
     if (I2C_Transmit(_instanceNumber, address, nullptr, 0, REPEATED_START)) {
         

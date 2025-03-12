@@ -714,7 +714,8 @@ tian_cons.descriptor.0=Standard Com Port
 tian_cons.hide=true
 tian_cons.build.board=SAMD_TIAN
 
-
+# Secure IoT 
+# ------------------------------------------
 # Board Name
 sec-iot.name=Sec-IoT Board
 
