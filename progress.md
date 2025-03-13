@@ -1,11 +1,7 @@
-Got it! Here's your **updated roadmap**, including the **linker and startup code modifications**:  
-
----
-
 # 🚀 **RISC-V Arduino Porting Roadmap**  
 
 ## ✅ **Completed Work:**  
-✔️ **Modified `platform.txt`** – Needs small updates for dynamic linker path.  
+✔️ **Modified `platform.txt`** – ✅ **Dynamic linker path updated**  
 ✔️ **Created new chip directory (`variants/<your-chip>/`)**  
    - `variant.h` (still needs modifications)  
    - `linker_scripts/` (✅ Modified)  
@@ -14,16 +10,27 @@ Got it! Here's your **updated roadmap**, including the **linker and startup code
 ✔️ **Added our linker script (`linker_scripts/link.ld`)**  
 ✔️ **Updated startup code (`start.s`)**  
    - Corrected RISC-V vector table and initialization  
+✔️ **Implemented `HardwareSerial.cpp/.h` (UART TX/RX) - Needs Verification**  
 
 ---
 
 ## 🔥 **Next Steps / To-Do List**  
 
-### **1️⃣ Finalize Syscalls & Low-Level I/O**  
-🔲 **Complete `syscalls.c` (Dummy Syscalls Fix)**  
-   - Implement `_write()` → UART output for `printf`, `Serial.print()`  
-   - Ensure `_read()`, `_close()`, `_fstat()`, `_sbrk()`, etc., are stubbed properly  
-   - Make sure heap (`sbrk`) works properly for dynamic memory allocation  
+### **1️⃣ Verify UART, I2C, and Syscalls**  
+🔲 **Test and Debug `HardwareSerial.cpp/.h` (UART TX/RX)**  
+   - Check if `Serial.begin()`, `Serial.print()`, and `Serial.read()` work correctly  
+   - Ensure proper TX/RX functionality  
+
+🔲 **Verify I2C Communication (`Wire.cpp/.h`)**  
+   - Test `Wire.begin()` and communication with an I2C device  
+
+🔲 **Fix and Test `syscalls.c` (Low-Level I/O)**  
+   - Verify `_write()` → Should output UART for `printf`, `Serial.print()`  
+   - Check `_read()`, `_close()`, `_fstat()`, `_sbrk()` for memory allocation  
+
+🔲 **Verify Core Libraries (`Print.h`, `String.h`, `Stream.h`)**  
+   - Ensure proper functionality of print streams and string manipulation  
+   - Check compatibility with `Serial`, `Wire`, and other output classes  
 
 ---
 
@@ -35,10 +42,6 @@ Got it! Here's your **updated roadmap**, including the **linker and startup code
 🔲 **Modify `wiring.c` and `wiring_digital.c`**  
    - Ensure `pinMode()`, `digitalWrite()`, `analogRead()` work correctly  
 
-🔲 **Modify `HardwareSerial.cpp/.h`**  
-   - Ensure `Serial.begin()`, `Serial.print()`, `Serial.read()` work  
-   - Implement UART TX/RX handling  
-
 🔲 **Verify `SPI` Support**  
    - Modify `SPIClass` to work with your RISC-V chip  
 
@@ -48,9 +51,7 @@ Got it! Here's your **updated roadmap**, including the **linker and startup code
 ---
 
 ### **3️⃣ Toolchain & Build System Fixes**  
-🔲 **Fix dynamic linker path in `platform.txt`**  
-   - Ensure correct linker detection at build time  
-
+✔️ **Fixed dynamic linker path in `platform.txt`**  
 🔲 **Ensure OpenOCD integration for flashing**  
    - Check `tools.flashrom.upload.pattern` in `platform.txt`  
 
@@ -69,11 +70,10 @@ Got it! Here's your **updated roadmap**, including the **linker and startup code
 ---
 
 ### 📌 **Immediate Next Steps**  
-1️⃣ **Finish `syscalls.c` (_write for UART_)**  
-2️⃣ **Modify `variant.h` (pin/peripheral definitions)**  
-3️⃣ **Check GPIO, Serial, I2C, SPI functionality**  
-4️⃣ **Test with Arduino IDE & fix linker issues**  
+1️⃣ **Test UART TX/RX (`Serial.print()`, `Serial.read()`)**  
+2️⃣ **Test I2C (`Wire.begin()`, scan for devices)**  
+3️⃣ **Verify `syscalls.c` and ensure `_write()` works for printf**  
+4️⃣ **Check compatibility of `Print.h`, `String.h`, and `Stream.h`**  
 
 ---
-
-Let me know if you need help refining specific parts! 🚀
+removed canmsg and related stuff commented Saferingbuffer

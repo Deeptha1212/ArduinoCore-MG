@@ -23,7 +23,8 @@
 
 #include <inttypes.h>
 #include "Print.h"
-
+#include "String.h"
+// #include "Arduino.h"
 // compatibility macros for testing
 /*
 #define   getInt()            parseInt()

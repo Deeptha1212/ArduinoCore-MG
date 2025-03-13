@@ -1,6 +1,10 @@
 #include <sys/stat.h>
 #include <errno.h>
-#include "Arduino.h"  // Required for Serial in Arduino
+
+
+// #include "cores/arduino/Arduino.h"
+#pragma once
+
 extern "C" {
     #include "api/HardwareSerial.h"
 }
@@ -19,9 +23,14 @@ int _kill(int pid, int sig) {
 // Redirect `printf()` and `write()` output to Serial
 int _write(int file, char *ptr, int len) {
     for (int i = 0; i < len; i++) {
-        Serial0.write(ptr[i]);
+        arduino::Serial0.write(ptr[i]); 
     }
     return len;
+}
+
+// Reentrant version of _write (for Newlib)
+int _write_r(struct _reent *r, int file, char *ptr, int len) {
+    return _write(file, ptr, len);
 }
 
 // Close a file (not used in embedded)
@@ -77,7 +86,7 @@ int _stat(const char *file, struct stat *st) {
 }
 
 // Create a new link (not supported)
-int _link(const char *old, const char *new) {
+int _link(const char *old, const char *new_path) {
     return -1;
 }
 

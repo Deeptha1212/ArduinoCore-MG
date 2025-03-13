@@ -7,15 +7,48 @@
 #include "math_functions.h"
 // #include "log.h"
 
+
+#ifndef ISALPHA
+#define ISALPHA
 #define isalpha(c)    (((c) >= 'A' && (c) <= 'Z') || ((c) >= 'a' && (c) <= 'z'))
+#endif
+
+#ifndef ISUPPER
+#define ISUPPER
 #define isupper(c)    ((c) >= 'A' && (c) <= 'Z')
+#endif
+
+#ifndef ISLOWER
+#define ISLOWER
 #define islower(c)    ((c) >= 'a' && (c) <= 'z')
+#endif
+
+#ifndef ISDIGIT
+#define ISDIGIT
 #define isdigit(c)    ((c) >= '0' && (c) <= '9')
+#endif
+
+#ifndef ISXDIGIT
+#define ISXDIGIT
 #define isxdigit(c)   (isdigit(c) || ((c) >= 'a' && (c) <= 'f') || ((c) >= 'A' && (c) <= 'F'))
+#endif
+
+#ifndef ISSPACE
+#define ISSPACE
 #define isspace(c)    ((c) == ' ' || (c) == '\t' || (c) == '\n' || (c) == '\v' || (c) == '\f' || (c) == '\r')
+#endif
+
+#ifndef ISPUNCT
+#define ISPUNCT
 #define ispunct(c)    (((c) >= 33 && (c) <= 47) || ((c) >= 58 && (c) <= 64) || \
                        ((c) >= 91 && (c) <= 96) || ((c) >= 123 && (c) <= 126))
+#endif
+
+#ifndef ISALNUM
+#define ISALNUM
 #define isalnum(c)    (isalpha(c) || isdigit(c))
+#endif
+
 
 #ifdef __cplusplus
 extern "C" {

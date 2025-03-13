@@ -24,6 +24,8 @@
 
 #include "Common.h"
 #include "Stream.h"
+#include "String.h"
+#include <cstring> // Make sure to include this header
 
 #define PARSE_TIMEOUT 1000  // default number of milli-seconds to wait
 
@@ -237,7 +239,9 @@ String Stream::readString()
   int c = timedRead();
   while (c >= 0)
   {
-    ret += (char)c;
+   ret.concat((char*)c);
+
+
     c = timedRead();
   }
   return ret;
@@ -249,7 +253,10 @@ String Stream::readStringUntil(char terminator)
   int c = timedRead();
   while (c >= 0 && (char)c != terminator)
   {
-    ret += (char)c;
+    ret.concat((char*)c);
+
+
+
     c = timedRead();
   }
   return ret;
