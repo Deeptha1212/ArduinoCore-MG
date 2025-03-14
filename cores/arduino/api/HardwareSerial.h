@@ -70,3 +70,7 @@ extern void serialEventRun(void) __attribute__((weak));
 
 #endif  // HARDWARESERIAL_H
 }
+extern arduino::HardwareSerial Serial;
+extern arduino::HardwareSerial Serial1;
+extern arduino::HardwareSerial Serial2;
+extern arduino::HardwareSerial Serial3;

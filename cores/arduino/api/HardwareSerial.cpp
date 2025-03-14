@@ -2,6 +2,11 @@
 #include "uart.h"
 #include <cstdlib>  // For malloc/free
 
+arduino::HardwareSerial Serial(0);
+arduino::HardwareSerial Serial1(1);
+arduino::HardwareSerial Serial2(2);
+arduino::HardwareSerial Serial3(3);
+
 namespace arduino {
 
 // Constructor
@@ -89,3 +94,6 @@ size_t HardwareSerial::write(uint8_t data) {
 }
 
 }  // namespace arduino
+
+
+
