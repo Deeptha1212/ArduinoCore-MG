@@ -10,6 +10,9 @@
         "syscall.h": "c",
         "stat.h": "c",
         "arduino.h": "c",
-        "hardwareserial.h": "c"
+        "hardwareserial.h": "c",
+        "io.h": "c",
+        "string_functions.h": "c",
+        "log.h": "c"
     }
 }
