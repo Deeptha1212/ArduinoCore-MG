@@ -57,7 +57,7 @@ recipe.S.o.pattern="{compiler.path}{compiler.S.cmd}" {compiler.S.flags} -DARDUIN
 recipe.ar.pattern="{compiler.path}{compiler.ar.cmd}" {compiler.ar.flags} "{archive_file_path}" "{object_file}"
 
 ## Linker
-recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} {build.extra_flags} -o "{build.path}/{build.project_name}.elf" "-L{build.path}" "-T{runtime.platform.path}/variants/{build.variant}/linker_scripts/link.ld" {object_files} -Wl,--whole-archive -Wl,--start-group "{build.path}/{archive_file}" -Wl,--no-whole-archive -Wl,--end-group -Wl,-Map={build.path}/{build.project_name}.map
+recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} {build.extra_flags} -o "{build.path}/{build.project_name}.elf" "-L{build.path}" "-T{runtime.platform.path}/variants/{build.variant}/linker_scripts/link.ld" {object_files} "{build.path}/core/dummy_syscalls.cpp.o" -Wl,--whole-archive -Wl,--start-group "{build.path}/{archive_file}" -Wl,--no-whole-archive -Wl,--end-group -Wl,-Map={build.path}/{build.project_name}.map
 
 ## Compute size
 recipe.size.pattern="{compiler.path}riscv64-unknown-elf-size" -A "{build.path}/{build.project_name}.elf"

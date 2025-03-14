@@ -231,17 +231,15 @@ size_t Stream::readBytesUntil(char terminator, char *buffer, size_t length)
   return index; // return number of characters, not including null terminator
 }
 
-String Stream::readString()
-{
-  String ret;
-  int c = timedRead();
-  while (c >= 0)
-  {
-    ret += (char)c;
-    c = timedRead();
-  }
-  return ret;
+arduino::String arduino::Stream::readString() {
+    arduino::String ret;
+    char c;
+    while ((c = read()) >= 0) {
+        ret.concat(c);  // Change ret += (char)c; to this
+    }
+    return ret;
 }
+
 
 String Stream::readStringUntil(char terminator)
 {

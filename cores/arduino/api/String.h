@@ -30,6 +30,9 @@ namespace arduino {
         // Destructor
         ~String();
 
+        bool concat(char c);
+
+        String& operator+=(char c);
         // Copy assignment operator
         String& operator=(const String& other);
 

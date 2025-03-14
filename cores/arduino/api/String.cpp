@@ -24,6 +24,14 @@ namespace arduino {
             std::strcpy(buffer, other.buffer);
         }
     }
+    bool String::concat(char c) {
+        char str[2] = {c, '\0'};  // Convert char to a null-terminated string
+        return concat(str);        // Use existing concat(const char*) function
+    }
+    String& String::operator+=(char c) {
+        concat(c);
+        return *this;
+    }
 
     // Move constructor
     String::String(String&& other) noexcept : buffer(other.buffer), len(other.len), capacity(other.capacity) {
