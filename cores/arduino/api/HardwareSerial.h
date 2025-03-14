@@ -66,8 +66,7 @@ protected:
 // Weak definition for serialEventRun (if used)
 extern void serialEventRun(void) __attribute__((weak));
 // Serial objects declaration
-extern arduino::HardwareSerial Serial0;
-extern arduino::HardwareSerial Serial1;
+
 
 #endif  // HARDWARESERIAL_H
 }

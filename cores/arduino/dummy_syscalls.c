@@ -1,9 +1,9 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include "Arduino.h"  // Required for Serial in Arduino
-extern "C" {
-    #include "api/HardwareSerial.h"
-}
+// extern "C" {
+// #include "../api/HardwareSerial.h"
+// }
 
 // Get process ID (not relevant for microcontrollers)
 __attribute__((weak)) int _getpid(void) {
@@ -19,7 +19,7 @@ __attribute__((weak)) int _kill(int pid, int sig) {
 // Redirect `printf()` and `write()` output to Serial
 __attribute__((weak)) int _write(int file, char *ptr, int len) {
     for (int i = 0; i < len; i++) {
-        arduino::Serial0.write(ptr[i]);
+        // Serial0.write(ptr[i]);
     }
     return len;
 }
