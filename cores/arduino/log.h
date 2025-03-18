@@ -47,7 +47,6 @@ extern "C" {
 #define ERROR 1
 #define FATAL 0
 
-extern void vprintfmt(void (*putch)(int, void**), void **putdat, const char *fmt, va_list ap);
 
 //function prototype
 void log_trace(const char*fmt, ...);

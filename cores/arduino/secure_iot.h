@@ -4233,7 +4233,7 @@ typedef struct {                                /*!< OTP Structure              
 #define I2C_OFFSET                  0x00000100UL
 #define PWM_OFFSET                  0x00000100UL
 
-#define CLOCK_FREQUENCY_FPGA        40000000UL
+#define CLOCK_FREQUENCY_FPGA        30000000UL
 #define CLOCK_FREQUENCY_ASIC        700000000UL
 extern volatile uint8_t log_level;
 extern volatile uint64_t CLOCK_FREQUENCY_BASE;

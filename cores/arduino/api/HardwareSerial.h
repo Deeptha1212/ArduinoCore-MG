@@ -42,21 +42,21 @@ public:
     HardwareSerial(uint8_t instanceno);
 
     // Initialize UART
-    virtual void begin(unsigned long baudRate);
-    virtual void begin(unsigned long baudRate, uint16_t config);
+     void begin(unsigned int baudRate);
+     void begin(unsigned int baudRate, uint16_t config);
     
     // End the UART communication
-    virtual void end();
+     void end();
     
     // UART data handling functions
-    virtual int available();
-    virtual int peek();
-    virtual int read();
-    virtual void flush();
-    virtual size_t write(uint8_t data);
+     int available();
+     int peek();
+     int read();
+     void flush();
+     size_t write(uint8_t data);
     
     // Operator bool to check if the serial interface is available
-    virtual operator bool() { return uart_config != nullptr; }
+     operator bool() { return uart_config != nullptr; }
 
 protected:
     uint8_t instance;

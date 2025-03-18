@@ -82,7 +82,7 @@ uint8_t UART_Interrupt_Enable(UART_Config_t *uart_config,unsigned short interrup
 	return 0;
 }
 
-uint8_t UART_Init(UART_Config_t const *uart_config)
+uint8_t UART_Init(UART_Config_t *uart_config)
 {
 	log_info("\nInitializing uart instance %d",uart_config->uart_num);
 	

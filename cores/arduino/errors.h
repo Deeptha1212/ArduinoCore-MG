@@ -146,8 +146,8 @@
 #define EHWPOISON       133     /* Memory page has hardware error */
 
 #define SPI_BUSY        134
-#define FIFO_NOT_EMPTY  135
-#define FIFO_EMPTY      136
+#define EFIFO_NOT_EMPTY  135
+#define EFIFO_EMPTY      136
 #define BAUDRATE_MISSALIGNED    137
 #define ACK_NOTRECEIVED 138
 #define I2C_BUS_BUSY    139
@@ -190,4 +190,4 @@
 #define EJUKEBOX        528     /* Request initiated, but will not complete before timeout */
 #define EIOCBQUEUED     529     /* iocb queued, will get completion event */
 
-#endif ERRORS_H
+#endif //ERRORS_H

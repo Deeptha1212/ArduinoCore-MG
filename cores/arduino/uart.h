@@ -140,7 +140,7 @@ uint8_t UART_Available(UART_Config_t *uart_config);
  * @return It returns 0 which means operation is success.
  */
 
-uint8_t UART_Init(UART_Config_t const *uart_config);
+uint8_t UART_Init(UART_Config_t *uart_config);
 
 /**
  * @fn uint8_t UART_Set_Baudrate(UART_Config_t *uart_config)

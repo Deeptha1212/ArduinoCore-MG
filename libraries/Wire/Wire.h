@@ -40,9 +40,10 @@ class TwoWire : public HardwareI2C
     TwoWire(uint8_t _instanceNumber);
     void begin() override;
     void begin(uint8_t address) override;
+    
     void end() override;
-    void onReceive(void (*function)(int)) override;
-    void onRequest(void (*function)()) override;
+    // void onReceive(void (*function)(int)) override;
+    // void onRequest(void (*function)()) override;
     void setClock(uint32_t);
 
     void beginTransmission(uint8_t);

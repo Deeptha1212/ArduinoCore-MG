@@ -29,7 +29,6 @@
 #include "log.h"
 #include "utils.h"
 #include "io.h"
-volatile uint8_t log_level=1;
 /** @fn void log_trace(const char*fmt, ...)
  * @brief Function to printf trace logs
  * @details This function printf trace logs if the log_level allows trace logs

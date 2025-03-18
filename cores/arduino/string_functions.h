@@ -5,17 +5,19 @@
 #include <limits.h>
 #include <ctype.h>
 #include "math_functions.h"
-// #include "log.h"
+#include "log.h"
 
-#define isalpha(c)    (((c) >= 'A' && (c) <= 'Z') || ((c) >= 'a' && (c) <= 'z'))
-#define isupper(c)    ((c) >= 'A' && (c) <= 'Z')
-#define islower(c)    ((c) >= 'a' && (c) <= 'z')
-#define isdigit(c)    ((c) >= '0' && (c) <= '9')
-#define isxdigit(c)   (isdigit(c) || ((c) >= 'a' && (c) <= 'f') || ((c) >= 'A' && (c) <= 'F'))
-#define isspace(c)    ((c) == ' ' || (c) == '\t' || (c) == '\n' || (c) == '\v' || (c) == '\f' || (c) == '\r')
-#define ispunct(c)    (((c) >= 33 && (c) <= 47) || ((c) >= 58 && (c) <= 64) || \
-                       ((c) >= 91 && (c) <= 96) || ((c) >= 123 && (c) <= 126))
-#define isalnum(c)    (isalpha(c) || isdigit(c))
+// #define isalpha(c)    (((c) >= 'A' && (c) <= 'Z') || ((c) >= 'a' && (c) <= 'z'))
+// #define isupper(c)    ((c) >= 'A' && (c) <= 'Z')
+// #define islower(c)    ((c) >= 'a' && (c) <= 'z')
+// #define isdigit(c)    ((c) >= '0' && (c) <= '9')
+// #define isxdigit(c)   (isdigit(c) || ((c) >= 'a' && (c) <= 'f') || ((c) >= 'A' && (c) <= 'F'))
+// #define isspace(c)    ((c) == ' ' || (c) == '\t' || (c) == '\n' || (c) == '\v' || (c) == '\f' || (c) == '\r')
+/*
+	#define ispunct(c)    (((c) >= 33 && (c) <= 47) || ((c) >= 58 && (c) <= 64) || \
+	((c) >= 91 && (c) <= 96) || ((c) >= 123 && (c) <= 126))
+*/                      
+// #define isalnum(c)    (isalpha(c) || isdigit(c))
 
 #ifdef __cplusplus
 extern "C" {

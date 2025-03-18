@@ -13,12 +13,12 @@ namespace arduino {
 HardwareSerial::HardwareSerial(uint8_t instanceno) : instance(instanceno), uart_config(nullptr) {}
 
 // Initialize UART with baud rate only
-void HardwareSerial::begin(unsigned long baudRate) {
+void HardwareSerial::begin(unsigned int baudRate) {
     begin(baudRate, SERIAL_8N1);  // Default config
 }
 
 // Initialize UART with baud rate and config
-void HardwareSerial::begin(unsigned long baudRate, uint16_t config) {
+void HardwareSerial::begin(unsigned int baudRate, uint16_t config) {
     // Allocate memory if not already allocated
     if (!uart_config) {
         uart_config = (UART_Config_t*)malloc(sizeof(UART_Config_t));

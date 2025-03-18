@@ -14,7 +14,7 @@ uint32_t SystemCoreClock = 1000000ul; // Set to actual RISC-V core clock
  */
 void init(void) {
     // Set up system clock (modify based on your RISC-V board)
-    SystemCoreClock = 1000000ul; // Example: Modify based on actual clock speed
+    SystemCoreClock = 30000000ul; // Example: Modify based on actual clock speed
 
     // Configure GPIO as inputs by default
     for (uint32_t ul = 0; ul < NUM_DIGITAL_PINS; ul++) {

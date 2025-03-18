@@ -19,8 +19,7 @@
 
 #include "i2c.h"
 #include "secure_iot.h"
-
-extern volatile uint64_t CLOCK_FREQUENCY_BASE=40000000UL;
+#include "log.h"
 // #include"gptimer.h"
 /*Necessary macros for I2C driver*/
 #define I2C_PIN 0x80
@@ -45,7 +44,7 @@ extern volatile uint64_t CLOCK_FREQUENCY_BASE=40000000UL;
 #define I2C_IDLE          (I2C_ESO                  | I2C_ACK)
 #define I2C_NACK          (I2C_ESO)
 #define I2C_DISABLE       (I2C_PIN|I2C_ACK)
-#define I2C_OFFSET 0x100
+// #define I2C_OFFSET 0x100
 
 
 /* Struct to access I2C registers as 32 bit registers */
@@ -53,7 +52,7 @@ extern volatile uint64_t CLOCK_FREQUENCY_BASE=40000000UL;
 
 uint32_t I2C_Init(uint8_t instance_number,uint32_t clock_frequency) 
 { 
-  if(instance_number>1 || instance_number<0)
+  if(instance_number>1)
 	  return ENODEV;
   I2C_REG(instance_number)->CTRL = I2C_PIN;//serial interface off -> equivalent to 0x80 in S1'
   uint32_t scl_div = CLOCK_FREQUENCY_BASE/(2*2*clock_frequency);
@@ -65,7 +64,7 @@ uint32_t I2C_Init(uint8_t instance_number,uint32_t clock_frequency)
 
 uint32_t I2C_Transmit(uint32_t instance_number,uint8_t slave_address,uint8_t *data,uint8_t length,uint8_t mode)
 {
-  if(instance_number>1 || instance_number<0)
+  if(instance_number>1)
     return ENODEV;
   if(mode & START_BIT)
   while (!(I2C_REG(instance_number)->STATUS_b.STATUS_BB));//wait till bus is free
@@ -113,7 +112,7 @@ uint32_t I2C_Transmit(uint32_t instance_number,uint8_t slave_address,uint8_t *da
 
 uint32_t I2C_Recieve(uint32_t instance_number,uint8_t slave_address,uint8_t *data,uint8_t length,uint8_t mode)
 {
-  if(instance_number>1 || instance_number<0)
+  if(instance_number>1)
     return ENODEV;
   if(mode & START_BIT)
     while (!(I2C_REG(instance_number)->STATUS_b.STATUS_BB));//wait till bus is free

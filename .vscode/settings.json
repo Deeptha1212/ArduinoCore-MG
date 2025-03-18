@@ -13,6 +13,21 @@
         "hardwareserial.h": "c",
         "io.h": "c",
         "string_functions.h": "c",
-        "log.h": "c"
+        "log.h": "c",
+        "i2c.h": "c",
+        "uart.h": "c",
+        "cstdlib": "cpp",
+        "traps.h": "c",
+        "utils.h": "c",
+        "memory_functions.h": "c",
+        "defines.h": "c",
+        "clint_driver.h": "c",
+        "plic.h": "c",
+        "*.impl": "cpp",
+        "exception": "cpp",
+        "memory_resource": "cpp",
+        "iosfwd": "cpp",
+        "new": "cpp",
+        "streambuf": "cpp"
     }
 }

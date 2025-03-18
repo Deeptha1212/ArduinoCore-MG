@@ -43,17 +43,18 @@ void TwoWire::begin() {
 }
 
 void TwoWire::begin(uint8_t address) { 
+    (void)address;
     begin();
 }
 
 void TwoWire::end() { 
 }
 
-void TwoWire::onReceive(void (*function)(int)) { 
-}
+// void TwoWire::onReceive(void (*function)(int)) { 
+// }
 
-void TwoWire::onRequest(void (*function)()) { 
-}
+// void TwoWire::onRequest(void (*function)()) { 
+// }
 
 
 
@@ -62,7 +63,7 @@ void TwoWire::setClock(uint32_t baudrate) {
 }
 size_t TwoWire::requestFrom(uint8_t address, size_t quantity, bool stopBit)
 {
-    if (quantity <0 && quantity==0) {
+    if (quantity==0) {
         return 0;
     }
 
@@ -97,36 +98,6 @@ void TwoWire::beginTransmission(uint8_t address) {
 }
 
 
-// size_t TwoWire::requestFrom(uint8_t address, size_t quantity, bool stopBit)
-// {
-//     if (quantity == 0) {
-//         return 0;
-//     }
-
-//     size_t byteRead = 0;
-
-//    rxBuffer.clear();  // Clear the buffer before filling it with new data
-//    if(I2C_Transmit(_instanceNumber,address,tempBuffer, tempBufferLength,REPEATED_START)){
-//       read(address, rxBuffer, quantity);
-
-//       // Create a temporary array to store the data from rxBuffer
-//       temp1[quantity];
-
-//       // Copy data from rxBuffer to temp1
-//       while (byteRead < quantity && rxBuffer.available()) {
-//           temp1[byteRead] = read();  // Store data from rxBuffer into temp1
-//           byteRead++;
-//       }
-//       I2C_Recieve(_instanceNumber,address, temp1, byteRead,REPEATED_START);
-//       // Optionally send stop bit if required
-//       if (stopBit) {
-//         // Pass the temp1 array to your custom i2c_receive function
-//         I2C_Recieve(_instanceNumber,address, temp1, byteRead,STOP_BIT);
-//       }
-
-//     return byteRead;  // Return the number of bytes read
-// }
-// }
 
 int TwoWire::read()
 {
@@ -143,32 +114,13 @@ int TwoWire::read()
     }
 }
 
-// Errors:
-//  0 : Success
-//  1 : Data too long
-//  2 : NACK on transmit of address
-//  3 : NACK on transmit of data
-//  4 : Other error
 
 uint8_t TwoWire::endTransmission()
 {
   return endTransmission(true);
 }
 
-// uint8_t TwoWire::endTransmission(bool stopBit) {
-//     transmissionBegun = false;
 
-//     // If there's no data in the tempBuffer, return success
-//     if (tempBufferLength == 0) {
-//         return 0;  // No data to send
-//     }
-
-//     // Call the custom transmit function with tempBuffer
-//     I2C_Transmit(_instanceNumber,txAddress,tempBuffer, tempBufferLength,REPEATED_START);
-
-//     // Clear the tempBuffer after transmission
-//     tempBufferLength = 0;
-// }
 uint8_t TwoWire::endTransmission(bool stopBit) {
     if (!transmissionBegun) {
         return 1; // Error: No transmission started
@@ -233,11 +185,6 @@ int TwoWire::available(void)
   return rxBuffer.available();
 }
 
-// int TwoWire::read(void)
-// {
-//   return rxBuffer.read_char();
-// }
-
 int TwoWire::peek(void)
 {
   return rxBuffer.peek();
@@ -245,8 +192,7 @@ int TwoWire::peek(void)
 
 void TwoWire::flush(void)
 {
-  // Do nothing, use endTransmission(..) to force
-  // data transfer.
+ return rxBuffer.clear();
 }
 
 arduino::TwoWire Wire0(0);  // Initialize Wire0 on bus 0

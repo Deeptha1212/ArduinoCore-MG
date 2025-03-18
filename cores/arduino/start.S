@@ -45,7 +45,7 @@ li      t0, 0x888
 csrrc   zero, mie, t0  # disable machine level interrupt
 
 #Enable FP
-li a0, MSTATUS_FS & (MSTATUS_FS >> 1)
+li a0, 0x00006000
 csrs mstatus, a0
 csrwi fcsr, 0
 
@@ -111,19 +111,6 @@ li  x31,0
 .option norelax
 la gp, __global_pointer$
 .option pop
-
-init_ramcode:
-    /* init sdata section */
-    la	a0, __ram_code_start
-    la	a1, __ram_code_end-4 /* section end is actually the start of the next section */
-    la	a2, _la_ramcode
-  1:
-    lw    a3, 0(a2)
-    sw		a3, 0(a0)
-    bgeu	a0, a1, init_data
-    addi	a0, a0, 4
-    addi  a2, a2, 4
-    j	        1b
 
 init_data:
     /* init data section */
@@ -204,21 +191,6 @@ nop
 nop
 nop
 j _init_
-
-1:
-  j 1b
-
-.section ".tdata.begin"
-.globl _tdata_begin
-_tdata_begin:
-
-.section ".tdata.end"
-.globl _tdata_end
-_tdata_end:
-
-.section ".tbss.end"
-.globl _tbss_end
-_tbss_end:
 
 1:
   j 1b

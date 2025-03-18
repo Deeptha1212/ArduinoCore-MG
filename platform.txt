@@ -3,6 +3,7 @@
 
 name=Arduino RISC-V Boards
 version=1.0.0
+build.board=RISC-V_BUILD
 
 # Compile variables
 # ------------------------
@@ -17,18 +18,19 @@ compiler.optimization_flags=-Os
 compiler.optimization_flags.release=-Os
 compiler.optimization_flags.debug=-Og
 
-compiler.c.extra_flags=-march=rv64imac -mabi=lp64d
-compiler.cpp.extra_flags=-march=rv64imac -mabi=lp64d
-compiler.S.extra_flags=-march=rv64imac -mabi=lp64d
+compiler.c.extra_flags=-march=rv64imafdc_zicsr_zifencei -mabi=lp64d -mcmodel=medany -nostartfiles
+compiler.cpp.extra_flags=-march=rv64imafdc_zicsr_zifencei -mabi=lp64d -mcmodel=medany -nostartfiles
+compiler.S.extra_flags=-march=rv64imafdc_zicsr_zifencei -mabi=lp64d -mcmodel=medany -nostartfiles
 
 compiler.c.elf.flags=  -nostdlib -nodefaultlibs -nostartfiles -Wl,-z,noexecstack,--gc-sections -Wl,--exclude-libs,ALL {build.extra_ldflags}
-compiler.c.flags=-c -fPIC -mcmodel=medany {compiler.warning_flags} {compiler.optimization_flags} -g3 -nostdlib {build.defines} -MMD -std=gnu11 -march=rv64imafdc_zicsr -mabi=lp64d -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fmessage-length=0 -fno-builtin
-compiler.cpp.flags=-c {compiler.warning_flags} {compiler.optimization_flags} -fPIC -mcmodel=medany -march=rv64imafdc -mabi=lp64d -g3 -fno-use-cxa-atexit -fno-rtti -fno-exceptions -MMD -nostdlib {build.defines} -std=gnu++17 -fsigned-char -ffunction-sections -fdata-sections -fmessage-length=0 -fno-builtin
-compiler.S.flags=-c -g -x assembler-with-cpp {compiler.optimization_flags} -march=rv64imafdc_zicsr -mabi=lp64d -fsigned-char -ffunction-sections -fdata-sections
+compiler.c.flags=-c -fPIC {compiler.warning_flags} {compiler.optimization_flags} {compiler.c.extra_flags} -g3 -nostdlib {build.defines} -MMD -std=gnu11 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fmessage-length=0 -fno-builtin
+compiler.cpp.flags=-c -fPIC {compiler.warning_flags} {compiler.optimization_flags} {compiler.cpp.extra_flags} -g3 -fno-use-cxa-atexit -fno-rtti -fno-exceptions -MMD -nostdlib {build.defines} -std=gnu++17 -fsigned-char -ffunction-sections -fdata-sections -fmessage-length=0 -fno-builtin
+compiler.S.flags=-c -g -x assembler-with-cpp {compiler.optimization_flags} {compiler.S.extra_flags} -fsigned-char -ffunction-sections -fdata-sections
 compiler.ar.flags=rcs
 
-compiler.elf2hex.bin.flags=-O binary -j .text -j .data
-compiler.elf2hex.hex.flags=-O ihex -j .text -j .data
+
+compiler.elf2hex.bin.flags=-O binary
+compiler.elf2hex.hex.flags=-O ihex -R .eeprom
 
 compiler.path=/opt/riscv/bin/
 compiler.c.cmd=riscv64-unknown-elf-gcc
@@ -37,27 +39,67 @@ compiler.S.cmd=riscv64-unknown-elf-gcc
 compiler.cpp.cmd=riscv64-unknown-elf-g++
 compiler.ar.cmd=riscv64-unknown-elf-ar
 compiler.objcopy.cmd=riscv64-unknown-elf-objcopy
+compiler.elf2hex.cmd=riscv64-unknown-elf2hex
 
 compiler.size.cmd=riscv64-unknown-elf-size
-compiler.define=-DARDUINO=
+
+compiler.define=-DARDUINO={build.board}
 build.extra_flags=
 build.extra_ldflags=
-compiler.S.extra_flags=
 
 # Compile Patterns
 # -----------------------
 
-recipe.c.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.c.flags} {includes} -c "{source_file}" -o "{object_file}"
-recipe.cpp.o.pattern="{compiler.path}{compiler.cpp.cmd}" {compiler.cpp.flags} {includes} -c "{source_file}" -o "{object_file}"
+recipe.c.o.pattern={compiler.path}{compiler.c.cmd} {compiler.c.flags} {includes} -c {source_file} -o {object_file}
+recipe.cpp.o.pattern={compiler.path}{compiler.cpp.cmd} {compiler.cpp.flags} {includes} -c {source_file} -o {object_file}
 
 ## Compile Assembly files
-recipe.S.o.pattern="{compiler.path}{compiler.S.cmd}" {compiler.S.flags} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} -DARDUINO_ARCH_RISCV {includes} {build.extra_flags} {compiler.S.extra_flags} "{source_file}" -o "{object_file}"
+recipe.S.o.pattern={compiler.path}{compiler.S.cmd} {compiler.S.flags} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} -DARDUINO_ARCH_RISCV {includes} {build.extra_flags} {compiler.S.extra_flags} {source_file} -o {object_file}
 
 ## Create archive
-recipe.ar.pattern="{compiler.path}{compiler.ar.cmd}" {compiler.ar.flags} "{archive_file_path}" "{object_file}"
+recipe.ar.pattern={compiler.path}{compiler.ar.cmd} {compiler.ar.flags} {archive_file_path} {object_file}
 
 ## Linker
-recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} {build.extra_flags} -o "{build.path}/{build.project_name}.elf" "-L{build.path}" "-T{runtime.platform.path}/variants/{build.variant}/linker_scripts/link.ld" {object_files} "{build.path}/core/dummy_syscalls.c.o" -Wl,--whole-archive -Wl,--start-group "{build.path}/{archive_file}" -Wl,--no-whole-archive -Wl,--end-group -Wl,-Map={build.path}/{build.project_name}.map
+recipe.c.combine.pattern={compiler.path}{compiler.c.elf.cmd} {compiler.c.elf.flags} {build.extra_flags} -o {build.path}/{build.project_name}.elf -L{build.path} -T{runtime.platform.path}/variants/{build.variant}/linker_scripts/link.ld {object_files} {build.path}/core/dummy_syscalls.c.o -Wl,--whole-archive -Wl,--start-group {build.path}/{archive_file} -Wl,--no-whole-archive -Wl,--end-group -Wl,-Map={build.path}/{build.project_name}.map
 
 ## Compute size
-recipe.size.pattern="{compiler.path}riscv64-unknown-elf-size" -A "{build.path}/{build.project_name}.elf"
+recipe.size.pattern={compiler.path}{compiler.size.cmd} -A {build.path}/{build.project_name}.elf
+recipe.size.regex.data=^(?:\.data|\.bss)\s+([0-9]+).*
+recipe.size.regex=^(?:\.data|\.text|\.rodata)\S*?\s+([0-9]+).*
+
+## Create output (bin file)
+#recipe.objcopy.bin.pattern={compiler.path}{compiler.elf2hex.cmd} {compiler.elf2hex.bin.flags} {compiler.elf2hex.extra_flags} {build.path}/{build.project_name}.elf {build.path}/{build.project_name}.bin
+
+## Create output (hex file)
+#recipe.objcopy.hex.pattern="{compiler.path}{compiler.elf2hex.cmd}" {compiler.elf2hex.hex.flags} {compiler.elf2hex.extra_flags} "{build.path}/{build.project_name}.elf" "{build.path}/{build.project_name}.hex"
+
+## Save hex
+#recipe.output.tmp_file={build.project_name}.bin
+#recipe.output.save_file={build.project_name}.{build.variant}.bin
+
+recipe.hooks.postbuild.1.pattern=sh -c "riscv64-unknown-elf-objdump -S -j .text {build.path}/{build.project_name}.elf > {build.path}/{build.project_name}.dump"
+
+
+# Uploader tools
+# ---------------------
+
+#tools.dfu-util.path={runtime.tools.dfu-util-0.11.0-arduino5.path}
+#tools.dfu-util.cmd=dfu-util
+#tools.dfu-util.upload.params.verbose=-d
+#tools.dfu-util.upload.params.quiet=
+# tools.dfu-util.upload.pattern="{path}/{cmd}" --device {upload.vid}:{pid.0},:{upload.pid} -D "{build.path}/{build.project_name}.bin" -a{upload.interface} -R
+# -Q introduced with latest dfu-util
+#tools.dfu-util.upload.pattern="{path}/{cmd}" --device {upload.vid}:{pid.0},:{upload.pid} -D "{build.path}/{build.project_name}.bin" -a{upload.interface} -Q
+
+#tools.bossac.path={runtime.tools.bossac-1.9.1-arduino5.path}
+#tools.bossac.cmd=bossac
+#tools.bossac.upload.params.verbose=-d
+#tools.bossac.upload.params.quiet=
+#tools.bossac.upload.pattern="{path}/{cmd}" {upload.verbose} --port={serial.port.file} -U -e -w "{build.path}/{build.project_name}.bin" -R
+
+# Required discoveries and monitors
+# ---------------------------------
+#pluggable_discovery.required.0=builtin:serial-discovery
+#pluggable_discovery.required.1=builtin:mdns-discovery
+#pluggable_discovery.required.2=builtin:dfu-discovery
+#pluggable_monitor.required.serial=builtin:serial-monitor
