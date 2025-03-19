@@ -8,9 +8,17 @@ arduino::HardwareSerial Serial2(2);
 arduino::HardwareSerial Serial3(3);
 
 namespace arduino {
+HardwareSerial::HardwareSerial(uint8_t instanceno)  
+{   
+    unsigned short *baud_reg = (unsigned short*)0x11300;
+    *baud_reg = 16;
+    printf("Instance:%d",instanceno);
+    instance=instanceno;
+
+}
 
 // Constructor
-HardwareSerial::HardwareSerial(uint8_t instanceno) : instance(instanceno), uart_config(nullptr) {}
+
 
 // Initialize UART with baud rate only
 void HardwareSerial::begin(unsigned int baudRate) {
@@ -25,6 +33,7 @@ void HardwareSerial::begin(unsigned int baudRate, uint16_t config) {
         if (!uart_config) return;  // Memory allocation failed
     }
 
+ 
     uart_config->uart_num = instance;
     uart_config->baudrate = baudRate;
     uart_config->delay = 0;
@@ -90,6 +99,13 @@ size_t HardwareSerial::write(uint8_t data) {
     if (!uart_config) return 0;
 
     struct uart_buf tx = { .uart_data = &data, .len = 1 };
+    return UART_Write(uart_config, &tx);
+}
+
+size_t HardwareSerial::write(uint8_t data, size_t len) {
+    if (!uart_config) return 0;
+
+    struct uart_buf tx = { .uart_data = &data, .len = len };
     return UART_Write(uart_config, &tx);
 }
 

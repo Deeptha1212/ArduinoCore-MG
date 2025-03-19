@@ -1,29 +1,11 @@
-/*
-  Print.h - Base class that provides print() and println()
-  Copyright (c) 2016 Arduino LLC.  All right reserved.
-
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
-
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
 
 #pragma once
 
-#include <inttypes.h>
-#include <stdio.h> // for size_t
+#include <stdio.h>
+#include <stdint.h>
 #include <cstring>
-#include "string_functions.h"
 
+#include "string.h"
 #include "String.h"
 #include "Printable.h"
 
@@ -40,7 +22,6 @@ class Print
     int write_error;
     size_t printNumber(unsigned long, uint8_t);
     size_t printULLNumber(unsigned long long, uint8_t);
-    size_t printFloat(double, int);
   protected:
     void setWriteError(int err = 1) { write_error = err; }
   public:
@@ -49,27 +30,10 @@ class Print
     int getWriteError() { return write_error; }
     void clearWriteError() { setWriteError(0); }
 
-    virtual size_t write(uint8_t) = 0;
-    size_t write(const char *str) {
-      if (str == NULL) return 0;
-      return write((const uint8_t *)str,StrLen((const char *)str));
-    }
-    virtual size_t write(const uint8_t *buffer, size_t size);
-    size_t write(const char *buffer, size_t size) {
-      return write((const uint8_t *)buffer, size);
-    }
+    // Removed virtual write()
 
-    // default to zero, meaning "a single write may block"
-    // should be overridden by subclasses with buffering
-    virtual int availableForWrite() { return 0; }
-
-#ifdef __FlashStringHelper
-size_t print(const __FlashStringHelper *);
-size_t println(const __FlashStringHelper *);
-#else
-size_t print(const char *);  // Fallback to normal char* if FlashStringHelper is not defined
-size_t println(const char *);
-#endif
+    // print() overloads
+    size_t print(const char *);
     size_t print(const String &);
     size_t print(char);
     size_t print(unsigned char, int = DEC);
@@ -82,7 +46,9 @@ size_t println(const char *);
     size_t print(double, int = 2);
     size_t print(const Printable&);
 
-    size_t println(const String &s);
+    // println() overloads
+    size_t println(const char *);
+    size_t println(const String &);
     size_t println(char);
     size_t println(unsigned char, int = DEC);
     size_t println(int, int = DEC);
@@ -95,8 +61,14 @@ size_t println(const char *);
     size_t println(const Printable&);
     size_t println(void);
 
-    virtual void flush() { /* Empty implementation for backward compatibility */ }
+    virtual void flush() {}
+
+  private:
+    // Internal helpers
+    size_t printNumberHelper(unsigned long, uint8_t);
+    size_t printULLNumberHelper(unsigned long long, uint8_t);
 };
 
 }
+
 using arduino::Print;

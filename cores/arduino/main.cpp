@@ -37,7 +37,7 @@ int main(void)
     init();
     // __libc_init_array();
     initVariant();
-    delay(1);
+    // delay(1);
 
     // REMOVE OR COMMENT OUT USB CODE
     // #if defined(USBCON)

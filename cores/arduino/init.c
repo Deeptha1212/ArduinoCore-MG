@@ -116,9 +116,9 @@ void _init_(void)
 {
 	log_trace("_init_ Entered\n");
 		
-	UART_Config_t uart_config;
-	uart_config.uart_num=0;
-	UART_Init(&uart_config); // Change this after UART driver changes
+	// UART_Config_t uart_config;
+	// uart_config.uart_num=0;
+	// UART_Init(&uart_config); // Change this after UART driver changes
 	Heap_Init();
 	Trap_Init();
 	PLIC_Init();

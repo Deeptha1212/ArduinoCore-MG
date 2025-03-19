@@ -67,7 +67,6 @@ class TwoWire : public HardwareI2C
     inline size_t write(long n) { return write((uint8_t)n); }
     inline size_t write(unsigned int n) { return write((uint8_t)n); }
     inline size_t write(int n) { return write((uint8_t)n); }
-    using Print::write;
 
 
 

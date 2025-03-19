@@ -36,6 +36,15 @@ struct str_info {
 	int neg, any;
 	unsigned int acc;
 };
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+size_t StrLen(const char *str);
+
+#ifdef __cplusplus
+}
+#endif
 
 /**
  * @fn int atoi(const char *str)

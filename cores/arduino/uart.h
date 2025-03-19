@@ -73,7 +73,7 @@ struct uart_buf {
 
 	void *uart_data;
 
-	int len;
+	size_t len;
 };
 
 struct un

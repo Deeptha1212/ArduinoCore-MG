@@ -38,8 +38,9 @@ compiler.c.elf.cmd=riscv64-unknown-elf-g++
 compiler.S.cmd=riscv64-unknown-elf-gcc
 compiler.cpp.cmd=riscv64-unknown-elf-g++
 compiler.ar.cmd=riscv64-unknown-elf-ar
-compiler.objcopy.cmd=riscv64-unknown-elf-objcopy
+
 compiler.elf2hex.cmd=riscv64-unknown-elf2hex
+compiler.bin.cmd=elf2hex/riscv64-unknown-elf-elf2bin
 
 compiler.size.cmd=riscv64-unknown-elf-size
 
@@ -66,19 +67,14 @@ recipe.c.combine.pattern={compiler.path}{compiler.c.elf.cmd} {compiler.c.elf.fla
 recipe.size.pattern={compiler.path}{compiler.size.cmd} -A {build.path}/{build.project_name}.elf
 recipe.size.regex.data=^(?:\.data|\.bss)\s+([0-9]+).*
 recipe.size.regex=^(?:\.data|\.text|\.rodata)\S*?\s+([0-9]+).*
-
-## Create output (bin file)
-#recipe.objcopy.bin.pattern={compiler.path}{compiler.elf2hex.cmd} {compiler.elf2hex.bin.flags} {compiler.elf2hex.extra_flags} {build.path}/{build.project_name}.elf {build.path}/{build.project_name}.bin
-
-## Create output (hex file)
-#recipe.objcopy.hex.pattern="{compiler.path}{compiler.elf2hex.cmd}" {compiler.elf2hex.hex.flags} {compiler.elf2hex.extra_flags} "{build.path}/{build.project_name}.elf" "{build.path}/{build.project_name}.hex"
-
-## Save hex
-#recipe.output.tmp_file={build.project_name}.bin
-#recipe.output.save_file={build.project_name}.{build.variant}.bin
+#@riscv64-unknown-elf-elf2hex --bit-width 64 --input $(OUT_DIR)/$(TP).shakti --output $(OUT_DIR)/code.mem
 
 recipe.hooks.postbuild.1.pattern=sh -c "riscv64-unknown-elf-objdump -S -j .text {build.path}/{build.project_name}.elf > {build.path}/{build.project_name}.dump"
+recipe.hooks.postbuild.2.pattern=riscv64-unknown-elf-elf2bin --input {build.path}/{build.project_name}.elf --output {build.path}/{build.project_name}.bin
+recipe.hooks.postbuild.3.pattern=riscv64-unknown-elf-elf2hex --bit-width 64 --input {build.path}/{build.project_name}.elf --output {build.path}/{build.project_name}.mem
 
+#recipe.hooks.postbuild.2.pattern={compiler.path}{compiler.bin.cmd} --input {build.path}/{build.project_name}.elf --output {build.path}/{build.project_name}.bin
+#recipe.hooks.postbuild.3.pattern={compiler.path}{compiler.elf2hex.cmd} --bit-width 64 --input {build.path}/{build.project_name}.elf --output {build.path}/{build.project_name}.mem
 
 # Uploader tools
 # ---------------------

@@ -54,6 +54,7 @@ public:
      int read();
      void flush();
      size_t write(uint8_t data);
+     size_t write(uint8_t data, size_t len);
     
     // Operator bool to check if the serial interface is available
      operator bool() { return uart_config != nullptr; }

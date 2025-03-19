@@ -28,6 +28,8 @@
         "memory_resource": "cpp",
         "iosfwd": "cpp",
         "new": "cpp",
-        "streambuf": "cpp"
+        "streambuf": "cpp",
+        "string_view": "cpp",
+        "cstring": "cpp"
     }
 }

@@ -113,10 +113,10 @@ uint8_t UART_Init(UART_Config_t *uart_config)
 	}
 				
 	log_debug("\nUART%d Initialized..", uart_config->uart_num);
+	UART_Set_Baudrate(uart_config);
 	
    if((uart_config->uart_num>0) && (uart_config->uart_num <= 4))
 	{
-   		UART_Set_Baudrate(uart_config);
    		UART_Config(uart_config);
 		wr_uart_rx_dma_threshold(uart_config->uart_num, uart_config->receive_mode);
 		wr_uart_tx_dma_threshold(uart_config->uart_num,uart_config->transfer_mode);

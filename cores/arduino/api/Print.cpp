@@ -1,318 +1,171 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
-
 #include "Print.h"
+#include <stdio.h>
 
-using namespace arduino;
+namespace arduino {
 
-// Public Methods //////////////////////////////////////////////////////////////
+// Print functions
 
-/* default implementation: may be overridden */
-size_t Print::write(const uint8_t *buffer, size_t size)
-{
-  size_t n = 0;
-  while (size--) {
-    if (write(*buffer++)) n++;
-    else break;
-  }
-  return n;
+size_t Print::print(const char *str) {
+    if (!str) return 0;
+    return printf("%s", str);
 }
 
-#ifdef __FlashStringHelper
-size_t Print::print(const __FlashStringHelper *ifsh)
-{
-#if defined(__AVR__)
-  PGM_P p = reinterpret_cast<PGM_P>(ifsh);
-  size_t n = 0;
-  while (1) {
-    unsigned char c = pgm_read_byte(p++);
-    if (c == 0) break;
-    if (write(c)) n++;
-    else break;
-  }
-  return n;
-#else
-  return print(reinterpret_cast<const char *>(ifsh));
-#endif
-}
-#endif
-
-size_t Print::print(const String &s)
-{
-  return write(s.c_str(), s.length());
+size_t Print::print(const String &s) {
+    return printf("%s", s.c_str());
 }
 
-size_t Print::print(const char str[])
-{
-  return write(str);
+size_t Print::print(char c) {
+    return printf("%c", c);
 }
 
-size_t Print::print(char c)
-{
-  return write(c);
+size_t Print::print(unsigned char val, int base) {
+    return print((unsigned long)val, base);
 }
 
-size_t Print::print(unsigned char b, int base)
-{
-  return print((unsigned long) b, base);
+size_t Print::print(int val, int base) {
+    return print((long)val, base);
 }
 
-size_t Print::print(int n, int base)
-{
-  return print((long) n, base);
+size_t Print::print(unsigned int val, int base) {
+    return print((unsigned long)val, base);
 }
 
-size_t Print::print(unsigned int n, int base)
-{
-  return print((unsigned long) n, base);
+size_t Print::print(long val, int base) {
+    if (base == DEC) return printf("%ld", val);
+    if (base == HEX) return printf("%lX", val);
+    if (base == OCT) return printf("%lo", val);
+    if (base == BIN) return printNumber((unsigned long)val, BIN);
+    return 0;
 }
 
-size_t Print::print(long n, int base)
-{
-  if (base == 0) {
-    return write(n);
-  } else if (base == 10) {
-    if (n < 0) {
-      int t = print('-');
-      n = -n;
-      return printNumber(n, 10) + t;
+size_t Print::print(unsigned long val, int base) {
+    if (base == DEC) return printf("%lu", val);
+    if (base == HEX) return printf("%lX", val);
+    if (base == OCT) return printf("%lo", val);
+    if (base == BIN) return printNumber(val, BIN);
+    return 0;
+}
+
+size_t Print::print(long long val, int base) {
+    if (base == DEC) return printf("%lld", val);
+    if (base == HEX) return printf("%llX", val);
+    if (base == OCT) return printf("%llo", val);
+    if (base == BIN) return printULLNumber((unsigned long long)val, BIN);
+    return 0;
+}
+
+size_t Print::print(unsigned long long val, int base) {
+    if (base == DEC) return printf("%llu", val);
+    if (base == HEX) return printf("%llX", val);
+    if (base == OCT) return printf("%llo", val);
+    if (base == BIN) return printULLNumber(val, BIN);
+    return 0;
+}
+
+size_t Print::print(double val, int digits) {
+    char fmt[10];
+    printf(fmt, sizeof(fmt), "%%.%df", digits);
+    return printf(fmt, val);
+}
+
+size_t Print::print(const Printable &p) {
+    return p.printTo(*this);
+}
+
+// println functions
+
+size_t Print::println(const char *str) {
+    if (!str) return printf("\n");
+    return printf("%s\n", str);
+}
+
+size_t Print::println(const String &s) {
+    return printf("%s\n", s.c_str());
+}
+
+size_t Print::println(char c) {
+    return printf("%c\n", c);
+}
+
+size_t Print::println(unsigned char val, int base) {
+    size_t n = print(val, base);
+    return n + printf("\n");
+}
+
+size_t Print::println(int val, int base) {
+    size_t n = print(val, base);
+    return n + printf("\n");
+}
+
+size_t Print::println(unsigned int val, int base) {
+    size_t n = print(val, base);
+    return n + printf("\n");
+}
+
+size_t Print::println(long val, int base) {
+    size_t n = print(val, base);
+    return n + printf("\n");
+}
+
+size_t Print::println(unsigned long val, int base) {
+    size_t n = print(val, base);
+    return n + printf("\n");
+}
+
+size_t Print::println(long long val, int base) {
+    size_t n = print(val, base);
+    return n + printf("\n");
+}
+
+size_t Print::println(unsigned long long val, int base) {
+    size_t n = print(val, base);
+    return n + printf("\n");
+}
+
+size_t Print::println(double val, int digits) {
+    size_t n = print(val, digits);
+    return n + printf("\n");
+}
+
+size_t Print::println(const Printable &p) {
+    size_t n = print(p);
+    return n + printf("\n");
+}
+
+size_t Print::println(void) {
+    return printf("\n");
+}
+
+// Private helpers
+
+size_t Print::printNumber(unsigned long n, uint8_t base) {
+    char buf[65];
+    char *str = &buf[sizeof(buf) - 1];
+    *str = '\0';
+    if (n == 0) *--str = '0';
+    else {
+        while (n > 0) {
+            *--str = "0123456789ABCDEF"[n % base];
+            n /= base;
+        }
     }
-    return printNumber(n, 10);
-  } else {
-    return printNumber(n, base);
-  }
+    return printf("%s", str);
 }
 
-size_t Print::print(unsigned long n, int base)
-{
-  if (base == 0) return write(n);
-  else return printNumber(n, base);
-}
-
-size_t Print::print(long long n, int base)
-{
-  if (base == 0) {
-    return write(n);
-  } else if (base == 10) {
-    if (n < 0) {
-      int t = print('-');
-      n = -n;
-      return printULLNumber(n, 10) + t;
+size_t Print::printULLNumber(unsigned long long n, uint8_t base) {
+    char buf[65];
+    char *str = &buf[sizeof(buf) - 1];
+    *str = '\0';
+    if (n == 0) *--str = '0';
+    else {
+        while (n > 0) {
+            *--str = "0123456789ABCDEF"[n % base];
+            n /= base;
+        }
     }
-    return printULLNumber(n, 10);
-  } else {
-    return printULLNumber(n, base);
-  }
+    return printf("%s", str);
 }
 
-size_t Print::print(unsigned long long n, int base)
-{
-  if (base == 0) return write(n);
-  else return printULLNumber(n, base);
-}
 
-size_t Print::print(double n, int digits)
-{
-  return printFloat(n, digits);
-}
 
-size_t Print::println(void)
-{
-  return write("\r\n");
-}
-
-size_t Print::println(const String &s)
-{
-  size_t n = print(s);
-  n += println();
-  return n;
-}
-
-size_t Print::println(const char c[])
-{
-  size_t n = print(c);
-  n += println();
-  return n;
-}
-
-size_t Print::println(char c)
-{
-  size_t n = print(c);
-  n += println();
-  return n;
-}
-
-size_t Print::println(unsigned char b, int base)
-{
-  size_t n = print(b, base);
-  n += println();
-  return n;
-}
-
-size_t Print::println(int num, int base)
-{
-  size_t n = print(num, base);
-  n += println();
-  return n;
-}
-
-size_t Print::println(unsigned int num, int base)
-{
-  size_t n = print(num, base);
-  n += println();
-  return n;
-}
-
-size_t Print::println(long num, int base)
-{
-  size_t n = print(num, base);
-  n += println();
-  return n;
-}
-
-size_t Print::println(unsigned long num, int base)
-{
-  size_t n = print(num, base);
-  n += println();
-  return n;
-}
-
-size_t Print::println(long long num, int base)
-{
-  size_t n = print(num, base);
-  n += println();
-  return n;
-}
-
-size_t Print::println(unsigned long long num, int base)
-{
-  size_t n = print(num, base);
-  n += println();
-  return n;
-}
-
-size_t Print::println(double num, int digits)
-{
-  size_t n = print(num, digits);
-  n += println();
-  return n;
-}
-
-size_t Print::println(const Printable& x)
-{
-  size_t n = print(x);
-  n += println();
-  return n;
-}
-
-// Private Methods /////////////////////////////////////////////////////////////
-
-size_t Print::printNumber(unsigned long n, uint8_t base)
-{
-  char buf[8 * sizeof(long) + 1]; // Assumes 8-bit chars plus zero byte.
-  char *str = &buf[sizeof(buf) - 1];
-
-  *str = '\0';
-
-  if (base < 2) base = 10;
-
-  do {
-    char c = n % base;
-    n /= base;
-
-    *--str = c < 10 ? c + '0' : c + 'A' - 10;
-  } while(n);
-
-  return write(str);
-}
-
-size_t Print::printULLNumber(unsigned long long n64, uint8_t base)
-{
-  char buf[64];
-  uint8_t i = 0;
-  uint8_t innerLoops = 0;
-
-  if (n64 == 0) {
-    write('0');
-    return 1;
-  }
-
-  if (base < 2) base = 10;
-
-  uint16_t top = 0xFFFF / base;
-  uint16_t th16 = 1;
-  while (th16 < top)
-  {
-    th16 *= base;
-    innerLoops++;
-  }
-
-  while (n64 > th16)
-  {
-    uint64_t q = n64 / th16;
-    uint16_t r = n64 - q * th16;
-    n64 = q;
-
-    for (uint8_t j=0; j < innerLoops; j++)
-    {
-      uint16_t qq = r / base;
-      buf[i++] = r - qq * base;
-      r = qq;
-    }
-  }
-
-  uint16_t n16 = n64;
-  while (n16 > 0)
-  {
-    uint16_t qq = n16 / base;
-    buf[i++] = n16 - qq * base;
-    n16 = qq;
-  }
-
-  size_t bytes = i;
-  for (; i > 0; i--)
-    write((char) (buf[i - 1] < 10 ? '0' + buf[i - 1] : 'A' + buf[i - 1] - 10));
-
-  return bytes;
-}
-
-size_t Print::printFloat(double number, int digits)
-{
-  if (digits < 0) digits = 2;
-
-  size_t n = 0;
-
-  if (isnan(number)) return print("nan");
-  if (isinf(number)) return print("inf");
-  if (number > 4294967040.0) return print ("ovf");
-  if (number < -4294967040.0) return print ("ovf");
-
-  if (number < 0.0) {
-    n += print('-');
-    number = -number;
-  }
-
-  double rounding = 0.5;
-  for (uint8_t i = 0; i < digits; ++i)
-    rounding /= 10.0;
-
-  number += rounding;
-
-  unsigned long int_part = (unsigned long)number;
-  double remainder = number - (double)int_part;
-  n += print(int_part);
-
-  if (digits > 0) n += print(".");
-
-  while (digits-- > 0)
-  {
-    remainder *= 10.0;
-    unsigned int toPrint = (unsigned int)remainder;
-    n += print(toPrint);
-    remainder -= toPrint;
-  }
-
-  return n;
-}
+} // namespace arduino
